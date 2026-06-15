@@ -1,7 +1,9 @@
 from fastapi import APIRouter, UploadFile, File
 import pandas as pd
+from app.utils.data_transformer import transform_dataset
 
 router = APIRouter()
+
 
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
@@ -12,9 +14,21 @@ async def upload_file(file: UploadFile = File(...)):
     else:
         df = pd.read_excel(file.file)
 
+    transformed_df = transform_dataset(df)
+
     return {
-        "filename": file.filename,
-        "columns": list(df.columns),
-        "total_rows": len(df),
-        "sample_data": df.head(5).to_dict(orient="records")
+        "total_rows": len(transformed_df),
+
+        "columns": list(transformed_df.columns),
+
+        "total_parts": int(
+            transformed_df["Part No"].nunique()
+        ),
+
+        "total_demand": float(
+            transformed_df["Demand"].sum()
+        ),
+
+        "sample_data": transformed_df.head(20)
+        .to_dict(orient="records")
     }
