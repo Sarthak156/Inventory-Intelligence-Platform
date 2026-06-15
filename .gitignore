@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+
+# Python
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+
+# Environment Variables
+.env
+.env.local
+
+# Build Files
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# VS Code
+.vscode/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Uploaded Files
+backend/uploads/
+
+# Dataset Files
+datasets/*.csv
+datasets/*.xlsx
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Vite
+vite.svg
+
+# Coverage
+coverage/
+
+# Cache
+.cache/
+
+# Mac/Linux temp files
+*.swp
+*.swo
+
+# Render / Deployment
+.render/
+
+# Pytest
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+
+# IDEs
+.idea/
+
+# Temporary files
+tmp/
+temp/
