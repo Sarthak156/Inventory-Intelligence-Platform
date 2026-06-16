@@ -22,9 +22,14 @@ export default function Upload() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const {
-  datasetPreview,
-  setDatasetPreview
-} = useContext(DataContext);
+    datasetPreview,
+    setDatasetPreview
+  } = useContext(DataContext);
+
+  const [fileId, setFileId] = useState(null);
+  const [sheets, setSheets] = useState([]);
+  const [selectedSheet, setSelectedSheet] = useState("");
+  const [processing, setProcessing] = useState(false);
 
   const handleUpload = async () => {
 
@@ -44,7 +49,12 @@ export default function Upload() {
         formData
       );
 
-      setDatasetPreview(response.data);
+      setFileId(response.data.file_id);
+      setSheets(response.data.sheets);
+      if (response.data.sheets && response.data.sheets.length > 0) {
+        setSelectedSheet(response.data.sheets[0]);
+      }
+      setDatasetPreview(null);
 
     } catch (error) {
       console.error(error);
@@ -55,6 +65,44 @@ export default function Upload() {
 
 
   };
+
+  const handleProcessSheet = async () => {
+    if (!fileId || !selectedSheet) return;
+
+    setProcessing(true);
+    setErrorMsg(null);
+
+    try {
+      const response = await API.post("/process-sheet", {
+        file_id: fileId,
+        sheet_name: selectedSheet,
+      });
+
+      setDatasetPreview(response.data);
+    } catch (error) {
+      console.error(error);
+      setErrorMsg(error.response?.data?.detail || "An unexpected error occurred during processing.");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setFile(e.dataTransfer.files[0]);
+      setFileId(null);
+      setSheets([]);
+      setDatasetPreview(null);
+    }
+  };
+
 
   return (<div className="max-w-6xl mx-auto mt-10">
 
@@ -74,7 +122,11 @@ export default function Upload() {
 
       <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
 
-      <div className="relative theme-bg-card backdrop-blur-xl border-2 border-dashed theme-border hover:theme-cyan-border rounded-3xl p-16 flex flex-col items-center justify-center text-center transition-all duration-300">
+      <div
+        className="relative theme-bg-card backdrop-blur-xl border-2 border-dashed theme-border hover:theme-cyan-border rounded-3xl p-16 flex flex-col items-center justify-center text-center transition-all duration-300"
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
 
         <div className="w-20 h-20 theme-bg-icon rounded-full flex items-center justify-center mb-6 theme-border group-hover:theme-cyan-border group-hover:scale-110 transition-all duration-500">
 
@@ -99,9 +151,12 @@ export default function Upload() {
           accept=".xlsx,.xls,.csv"
           className="hidden"
           id="dataset-upload"
-          onChange={(e) =>
-            setFile(e.target.files[0])
-          }
+          onChange={(e) => {
+            setFile(e.target.files[0]);
+            setFileId(null);
+            setSheets([]);
+            setDatasetPreview(null);
+          }}
         />
 
         <label
@@ -124,25 +179,61 @@ export default function Upload() {
           </div>
         )}
 
-        <button
-          onClick={handleUpload}
-          disabled={!file || loading}
-          className="mt-6 bg-cyan-500 hover:bg-cyan-400 transition-all duration-300 text-black font-semibold px-8 py-3 rounded-xl disabled:opacity-50"
-        >
+        {!fileId && (
+          <button
+            onClick={handleUpload}
+            disabled={!file || loading}
+            className="mt-6 bg-cyan-500 hover:bg-cyan-400 transition-all duration-300 text-black font-semibold px-8 py-3 rounded-xl disabled:opacity-50"
+          >
 
-          {loading ? (
-            <div className="flex items-center gap-2">
-              <Loader2
-                size={18}
-                className="animate-spin"
-              />
-              Processing...
-            </div>
-          ) : (
-            "Start AI Processing"
-          )}
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <Loader2
+                  size={18}
+                  className="animate-spin"
+                />
+                Processing...
+              </div>
+            ) : (
+              "Upload Dataset"
+            )}
 
-        </button>
+          </button>
+        )}
+
+        {fileId && sheets.length > 0 && (
+          <div className="mt-6 w-full max-w-sm mx-auto">
+            <label className="block text-sm font-medium theme-text mb-2 text-left">
+              Select Sheet to Process
+            </label>
+            <select
+              value={selectedSheet}
+              onChange={(e) => setSelectedSheet(e.target.value)}
+              className="w-full theme-bg-card-soft border theme-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4 theme-text appearance-none"
+            >
+              {sheets.map((sheet) => (
+                <option key={sheet} value={sheet} className="bg-gray-900 text-white">
+                  {sheet}
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={handleProcessSheet}
+              disabled={processing}
+              className="w-full bg-cyan-500 hover:bg-cyan-400 transition-all duration-300 text-black font-semibold px-8 py-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {processing ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Processing Sheet...
+                </>
+              ) : (
+                "Start AI Processing"
+              )}
+            </button>
+          </div>
+        )}
 
         {errorMsg && (
           <div className="mt-6 flex items-center gap-2 text-red-500 bg-red-500/10 px-4 py-3 rounded-xl text-sm max-w-lg mx-auto">
@@ -213,7 +304,7 @@ export default function Upload() {
 
     </div>
 
-    {datasetPreview && (
+    {datasetPreview && datasetPreview.columns && (
 
       <div className="mt-12 theme-bg-card rounded-3xl p-8 border theme-border">
 
@@ -239,7 +330,7 @@ export default function Upload() {
             </p>
 
             <h3 className="text-3xl theme-text font-semibold">
-              {datasetPreview.columns.length}
+              {datasetPreview.columns?.length}
             </h3>
           </div>
           <div className="theme-bg-card-soft rounded-xl p-5">
@@ -261,7 +352,7 @@ export default function Upload() {
             </p>
 
             <h3 className="text-3xl theme-text font-semibold">
-              {datasetPreview.total_demand.toLocaleString()}
+              {datasetPreview.total_demand?.toLocaleString()}
             </h3>
 
           </div>

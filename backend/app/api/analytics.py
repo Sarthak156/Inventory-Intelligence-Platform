@@ -13,7 +13,7 @@ def get_inventory():
     if not os.path.exists(DATA_PATH):
         return []
         
-    df = pd.read_csv(DATA_PATH)
+    df = pd.read_csv(DATA_PATH, low_memory=False)
     df = df.replace([np.inf, -np.inf], np.nan).fillna("")
     return df.to_dict(orient="records")
 
@@ -23,7 +23,7 @@ def get_monthly_demand():
     if not os.path.exists(DATA_PATH):
         return []
 
-    df = pd.read_csv(DATA_PATH)
+    df = pd.read_csv(DATA_PATH, low_memory=False)
 
     monthly = (
         df.groupby("Month")["Demand"]
