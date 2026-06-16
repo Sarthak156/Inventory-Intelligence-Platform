@@ -20,6 +20,7 @@ export default function Upload() {
 
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
   const {
   datasetPreview,
   setDatasetPreview
@@ -31,6 +32,7 @@ export default function Upload() {
     if (!file) return;
 
     setLoading(true);
+    setErrorMsg(null);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -46,7 +48,7 @@ export default function Upload() {
 
     } catch (error) {
       console.error(error);
-
+      setErrorMsg(error.response?.data?.detail || "An unexpected error occurred during upload.");
     } finally {
       setLoading(false);
     }
@@ -141,6 +143,15 @@ export default function Upload() {
           )}
 
         </button>
+
+        {errorMsg && (
+          <div className="mt-6 flex items-center gap-2 text-red-500 bg-red-500/10 px-4 py-3 rounded-xl text-sm max-w-lg mx-auto">
+            <AlertCircle size={18} className="shrink-0" />
+            <span className="text-left font-medium">
+              {errorMsg}
+            </span>
+          </div>
+        )}
 
       </div>
     </div>
