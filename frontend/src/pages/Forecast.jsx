@@ -30,24 +30,31 @@ const formatCompact = (num) => {
   return num.toLocaleString();
 };
 
-const KPICard = ({ title, value, subtitle, icon: Icon, isGood }) => (
-  <div className="theme-bg-card border theme-border rounded-2xl p-5 backdrop-blur-md hover:theme-cyan-border hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] transition-all duration-300 group">
-    <div className="flex justify-between items-start mb-4">
-      <div className="w-10 h-10 rounded-lg theme-bg-icon flex items-center justify-center border theme-border group-hover:theme-cyan-border transition-colors">
-        <Icon size={18} className="theme-muted group-hover:text-cyan-500" />
+const KPICard = ({ title, value, subtitle, icon: Icon, isGood, badgeColor }) => {
+  let colorClass = isGood ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20';
+  if (badgeColor === 'amber') colorClass = 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+  if (badgeColor === 'rose') colorClass = 'bg-rose-500/10 text-rose-500 border-rose-500/20';
+  if (badgeColor === 'emerald') colorClass = 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+
+  return (
+    <div className="theme-bg-card border theme-border rounded-2xl p-5 backdrop-blur-md hover:theme-cyan-border hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] transition-all duration-300 group">
+      <div className="flex justify-between items-start mb-4">
+        <div className="w-10 h-10 rounded-lg theme-bg-icon flex items-center justify-center border theme-border group-hover:theme-cyan-border transition-colors">
+          <Icon size={18} className="theme-muted group-hover:text-cyan-500" />
+        </div>
+        {subtitle && (
+          <span className={`text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wider border ${colorClass}`}>
+            {subtitle}
+          </span>
+        )}
       </div>
-      {subtitle && (
-        <span className={`text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wider ${isGood ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-cyan-500/10 text-cyan-500 border border-cyan-500/20'}`}>
-          {subtitle}
-        </span>
-      )}
+      <div>
+        <p className="theme-muted text-xs uppercase tracking-wider font-semibold mb-1">{title}</p>
+        <h3 className="text-3xl font-light theme-text tracking-tight">{value}</h3>
+      </div>
     </div>
-    <div>
-      <p className="theme-muted text-xs uppercase tracking-wider font-semibold mb-1">{title}</p>
-      <h3 className="text-3xl font-light theme-text tracking-tight">{value}</h3>
-    </div>
-  </div>
-);
+  );
+};
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -168,6 +175,8 @@ const Forecast = () => {
     forecast6M: 0,
     forecast12M: 0
   });
+  const [forecastSource, setForecastSource] = useState("GLOBAL_AGGREGATED");
+  const [sparsity, setSparsity] = useState(0);
 
   const [parts, setParts] = useState([]);
   const [selectedPart, setSelectedPart] = useState("ALL_PARTS");
@@ -176,7 +185,10 @@ const Forecast = () => {
   const [isFetchingPart, setIsFetchingPart] = useState(false);
   const horizons = ['1M', '3M', '6M', '12M'];
   
-  const processDemandData = (demandData) => {
+  const processDemandData = (dataObj) => {
+    const demandData = Array.isArray(dataObj) ? dataObj : (dataObj.items || []);
+    setForecastSource(dataObj.source || "GLOBAL_AGGREGATED");
+    setSparsity(dataObj.sparsity || 0);
     setFullData(demandData);
     if (demandData.length > 0) {
       const historicalData = demandData.filter(d => !d.Is_Future);
@@ -223,14 +235,14 @@ const Forecast = () => {
           const fetchedParts = partsRes.data || [];
           setParts(fetchedParts);
           setActivePartsCount(fetchedParts.length);
-          processDemandData(demandRes.data || []);
+          processDemandData(demandRes.data || {});
           setLoading(false);
         } else {
           const url = selectedPart === "ALL_PARTS" 
             ? "/monthly-demand" 
             : `/monthly-demand/${encodeURIComponent(selectedPart)}`;
           const demandRes = await API.get(url);
-          processDemandData(demandRes.data || []);
+          processDemandData(demandRes.data || {});
         }
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -248,6 +260,14 @@ const Forecast = () => {
     const months = parseInt(selectedHorizon);
     return [...historical, ...future.slice(0, months)];
   }, [fullData, selectedHorizon]);
+
+  const sourceMap = {
+    'PART_LEVEL': { label: 'SKU Direct', color: 'emerald', isGood: true },
+    'HALB_FALLBACK': { label: 'HALB Fallback', color: 'amber', isGood: false },
+    'GLOBAL_FALLBACK': { label: 'Global Fallback', color: 'rose', isGood: false },
+    'GLOBAL_AGGREGATED': { label: 'Aggregated', color: 'cyan', isGood: true }
+  };
+  const sourceInfo = sourceMap[forecastSource] || { label: 'Unknown', color: 'cyan', isGood: false };
 
   if (loading) {
     return (
@@ -300,7 +320,7 @@ const Forecast = () => {
         <KPICard title="Total Aggregated Demand" value={formatCompact(kpis.totalDemand)} icon={BarChart2} subtitle="Historical" isGood={false} />
         <KPICard title="Highest Demand Month" value={kpis.highestMonth} icon={TrendingUp} subtitle="Peak" isGood={false} />
         <KPICard title="Active Inventory Parts" value={activePartsCount.toLocaleString()} icon={Activity} />
-        <KPICard title="Forecast Readiness" value={kpis.readiness} icon={CheckCircle2} subtitle="Optimal" isGood={true} />
+        <KPICard title="Forecast Model" value={sourceInfo.label} icon={CheckCircle2} subtitle={`${((1 - sparsity) * 100).toFixed(0)}% Density`} badgeColor={sourceInfo.color} isGood={sourceInfo.isGood} />
         <KPICard title="1M Projected Demand" value={formatCompact(kpis.forecast1M)} icon={LineChartIcon} subtitle="Forecast" isGood={false} />
         <KPICard title="3M Projected Demand" value={formatCompact(kpis.forecast3M)} icon={LineChartIcon} subtitle="Forecast" isGood={false} />
         <KPICard title="6M Projected Demand" value={formatCompact(kpis.forecast6M)} icon={LineChartIcon} subtitle="Forecast" isGood={false} />
@@ -313,6 +333,16 @@ const Forecast = () => {
           <h2 className="text-xl theme-text flex items-center gap-3">
             Demand Forecast 
             {isFetchingPart && !loading && <Loader2 size={16} className="animate-spin text-cyan-500" />}
+            {!isFetchingPart && (
+              <span className={`text-[10px] px-2.5 py-1 rounded-lg border font-semibold uppercase tracking-wider ${
+                forecastSource === 'PART_LEVEL' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                forecastSource === 'HALB_FALLBACK' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                forecastSource === 'GLOBAL_FALLBACK' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+                'bg-cyan-500/10 text-cyan-500 border-cyan-500/20'
+              }`}>
+                {forecastSource.replace('_', ' ')}
+              </span>
+            )}
           </h2>
           <div className="flex items-center gap-1 theme-bg-card-soft p-1 rounded-xl border theme-border">
             {horizons.map(h => (
