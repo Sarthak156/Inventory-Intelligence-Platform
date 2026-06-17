@@ -8,7 +8,8 @@ import {
   CheckCircle2,
   Package,
   Search as SearchIcon,
-  ChevronDown
+  ChevronDown,
+  AlertCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -25,9 +26,10 @@ import API from "../services/api";
 
 const formatCompact = (num) => {
   if (num === null || num === undefined) return "0";
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-  if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-  return num.toLocaleString();
+  const rounded = Math.round(num);
+  if (rounded >= 1000000) return (rounded / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (rounded >= 1000) return (rounded / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return rounded.toLocaleString();
 };
 
 const KPICard = ({ title, value, subtitle, icon: Icon, isGood, badgeColor }) => {
@@ -35,6 +37,7 @@ const KPICard = ({ title, value, subtitle, icon: Icon, isGood, badgeColor }) => 
   if (badgeColor === 'amber') colorClass = 'bg-amber-500/10 text-amber-500 border-amber-500/20';
   if (badgeColor === 'rose') colorClass = 'bg-rose-500/10 text-rose-500 border-rose-500/20';
   if (badgeColor === 'emerald') colorClass = 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+  if (badgeColor === 'gray') colorClass = 'bg-gray-500/10 text-gray-400 border-gray-500/20';
 
   return (
     <div className="theme-bg-card border theme-border rounded-2xl p-5 backdrop-blur-md hover:theme-cyan-border hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] transition-all duration-300 group">
@@ -68,7 +71,7 @@ const CustomTooltip = ({ active, payload, label }) => {
               {entry.name}
             </span>
             <span className="text-sm font-semibold theme-text">
-              {entry.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              {entry.value != null ? Math.round(entry.value).toLocaleString() : '0'}
             </span>
           </div>
         ))}
@@ -176,6 +179,8 @@ const Forecast = () => {
     forecast12M: 0
   });
   const [forecastSource, setForecastSource] = useState("GLOBAL_AGGREGATED");
+  const [skuState, setSkuState] = useState("GLOBAL");
+  const [confidence, setConfidence] = useState("HIGH");
   const [sparsity, setSparsity] = useState(0);
 
   const [parts, setParts] = useState([]);
@@ -188,6 +193,8 @@ const Forecast = () => {
   const processDemandData = (dataObj) => {
     const demandData = Array.isArray(dataObj) ? dataObj : (dataObj.items || []);
     setForecastSource(dataObj.source || "GLOBAL_AGGREGATED");
+    setSkuState(dataObj.sku_state || "GLOBAL");
+    setConfidence(dataObj.confidence || "HIGH");
     setSparsity(dataObj.sparsity || 0);
     setFullData(demandData);
     if (demandData.length > 0) {
@@ -265,7 +272,9 @@ const Forecast = () => {
     'PART_LEVEL': { label: 'SKU Direct', color: 'emerald', isGood: true },
     'HALB_FALLBACK': { label: 'HALB Fallback', color: 'amber', isGood: false },
     'GLOBAL_FALLBACK': { label: 'Global Fallback', color: 'rose', isGood: false },
-    'GLOBAL_AGGREGATED': { label: 'Aggregated', color: 'cyan', isGood: true }
+    'GLOBAL_AGGREGATED': { label: 'Aggregated', color: 'cyan', isGood: true },
+    'LOW_CONFIDENCE': { label: 'Low Confidence', color: 'rose', isGood: false },
+    'NO_FORECAST': { label: 'No Forecast', color: 'gray', isGood: false }
   };
   const sourceInfo = sourceMap[forecastSource] || { label: 'Unknown', color: 'cyan', isGood: false };
 
@@ -330,20 +339,34 @@ const Forecast = () => {
       {/* FORECAST CHART */}
       <div className="theme-bg-card border theme-border rounded-2xl p-6 backdrop-blur-md">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-          <h2 className="text-xl theme-text flex items-center gap-3">
-            Demand Forecast 
-            {isFetchingPart && !loading && <Loader2 size={16} className="animate-spin text-cyan-500" />}
-            {!isFetchingPart && (
-              <span className={`text-[10px] px-2.5 py-1 rounded-lg border font-semibold uppercase tracking-wider ${
-                forecastSource === 'PART_LEVEL' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                forecastSource === 'HALB_FALLBACK' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                forecastSource === 'GLOBAL_FALLBACK' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
-                'bg-cyan-500/10 text-cyan-500 border-cyan-500/20'
-              }`}>
-                {forecastSource.replace('_', ' ')}
-              </span>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl theme-text flex items-center gap-2">
+              Demand Forecast 
+              {isFetchingPart && !loading && <Loader2 size={16} className="animate-spin text-cyan-500" />}
+            </h2>
+            {!isFetchingPart && skuState && (
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] px-2.5 py-1 rounded-lg border font-semibold uppercase tracking-wider ${
+                  skuState === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                  skuState === 'SPARSE' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                  skuState === 'DORMANT' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+                  skuState === 'INACTIVE' ? 'bg-gray-500/10 text-gray-400 border-gray-500/20' :
+                  'bg-cyan-500/10 text-cyan-500 border-cyan-500/20'
+                }`}>
+                  STATE: {skuState}
+                </span>
+                
+                <span className={`text-[10px] px-2.5 py-1 rounded-lg border font-semibold uppercase tracking-wider ${
+                  confidence === 'HIGH' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                  confidence === 'MEDIUM' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                  confidence === 'LOW' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+                  'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                }`}>
+                  {confidence} CONFIDENCE
+                </span>
+              </div>
             )}
-          </h2>
+          </div>
           <div className="flex items-center gap-1 theme-bg-card-soft p-1 rounded-xl border theme-border">
             {horizons.map(h => (
               <button 
@@ -360,6 +383,21 @@ const Forecast = () => {
             ))}
           </div>
         </div>
+        
+        {!isFetchingPart && skuState === 'INACTIVE' && (
+          <div className="mb-6 p-4 rounded-xl border border-gray-500/30 bg-gray-500/10 flex items-start gap-3">
+            <AlertCircle className="text-gray-400 shrink-0 mt-0.5" size={18} />
+            <p className="text-sm text-gray-300">This SKU has no historical consumption activity. Forecast generation has been disabled to maintain operational realism.</p>
+          </div>
+        )}
+        
+        {!isFetchingPart && skuState === 'DORMANT' && (
+          <div className="mb-6 p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 flex items-start gap-3">
+            <AlertCircle className="text-rose-400 shrink-0 mt-0.5" size={18} />
+            <p className="text-sm text-rose-300">Low confidence forecast due to highly dormant historical demand. Operational review is recommended.</p>
+          </div>
+        )}
+        
         <div className="w-full" style={{ minWidth: 0, height: 400 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>

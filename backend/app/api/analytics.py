@@ -61,24 +61,40 @@ def calculate_forecast(monthly_demand):
     if monthly_demand.empty:
         return pd.DataFrame(columns=['MonthDT', 'Demand', 'Forecast', 'Is_Future', 'Month'])
 
-    # Standard 3-month rolling average for a stable historical forecast
-    monthly_demand['Forecast'] = monthly_demand['Demand'].shift(1).rolling(window=3, min_periods=1).mean()
+    total_months = len(monthly_demand)
+    non_zero = (monthly_demand['Demand'] > 0).sum()
+    is_sparse = (total_months > 0) and ((total_months - non_zero) / total_months > 0.5)
+
+    if is_sparse:
+        # Non-zero moving average to prevent flattening intermittent demand spikes
+        shifted_demand = monthly_demand['Demand'].shift(1)
+        nz_ma = shifted_demand[shifted_demand > 0].rolling(window=3, min_periods=1).mean()
+        monthly_demand['Forecast'] = nz_ma
+        monthly_demand['Forecast'] = monthly_demand['Forecast'].ffill().fillna(0)
+    else:
+        # Standard 3-month rolling average for a stable historical forecast
+        monthly_demand['Forecast'] = monthly_demand['Demand'].shift(1).rolling(window=3, min_periods=1).mean()
 
     # ADVANCED: Project future months using iterative moving average
     last_date = monthly_demand['MonthDT'].max()
     future_dates = [last_date + relativedelta(months=i) for i in range(1, 13)]
     
     future_forecasts = []
-    # Get the last 3 actual demands to seed the future predictions
-    current_window = monthly_demand['Demand'].dropna().tail(3).tolist()
     
-    for _ in future_dates:
-        next_val = sum(current_window) / len(current_window) if current_window else 0
-        future_forecasts.append(next_val)
-        # Slide the window forward, using the prediction as the next input
-        if len(current_window) >= 3:
-            current_window.pop(0)
-        current_window.append(next_val)
+    if is_sparse:
+        last_nz_forecast = monthly_demand['Forecast'].iloc[-1] if not monthly_demand.empty else 0
+        future_forecasts = [last_nz_forecast] * 12
+    else:
+        # Get the last 3 actual demands to seed the future predictions
+        current_window = monthly_demand['Demand'].dropna().tail(3).tolist()
+        
+        for _ in future_dates:
+            next_val = sum(current_window) / len(current_window) if current_window else 0
+            future_forecasts.append(next_val)
+            # Slide the window forward, using the prediction as the next input
+            if len(current_window) >= 3:
+                current_window.pop(0)
+            current_window.append(next_val)
         
     future_df = pd.DataFrame({
         'MonthDT': future_dates,
@@ -99,25 +115,51 @@ def calculate_forecast(monthly_demand):
 @router.get("/monthly-demand/{part_no}")
 async def get_monthly_demand(part_no: str = None):
     if not os.path.exists(DATA_FILE):
-        return {"items": [], "source": "NONE", "sparsity": 0}
+        return {"items": [], "source": "NONE", "sku_state": "NONE", "confidence": "NONE", "sparsity": 0}
 
     part_monthly = get_monthly_demand_df(part_no=part_no)
 
     if part_monthly.empty:
-        return {"items": [], "source": "NONE", "sparsity": 0}
+        return {"items": [], "source": "NONE", "sku_state": "NONE", "confidence": "NONE", "sparsity": 0}
         
     total_months = len(part_monthly)
     non_zero = (part_monthly['Demand'] > 0).sum()
     sparsity_ratio = float((total_months - non_zero) / total_months) if total_months > 0 else 1.0
 
     if not part_no or part_no == "ALL_PARTS":
+        sku_state = "GLOBAL"
         forecast_source = "GLOBAL_AGGREGATED"
+        confidence = "HIGH"
         combined_df = calculate_forecast(part_monthly)
     else:
-        if non_zero >= 6 and sparsity_ratio < 0.5:
+        total_demand = part_monthly['Demand'].sum()
+        
+        # STEP 1: Classify SKU Behavior
+        if total_demand == 0:
+            sku_state = "INACTIVE"
+            forecast_source = "NO_FORECAST"
+            confidence = "NONE"
+        elif non_zero <= 2:
+            sku_state = "DORMANT"
+            forecast_source = "LOW_CONFIDENCE"
+            confidence = "LOW"
+        elif sparsity_ratio > 0.7 or non_zero < 6:
+            sku_state = "SPARSE"
+            forecast_source = "HALB_FALLBACK" # Intent; might fall back to global
+            confidence = "MEDIUM"
+        else:
+            sku_state = "ACTIVE"
             forecast_source = "PART_LEVEL"
+            confidence = "HIGH"
+
+        # STEP 2: Choose Forecasting Strategy
+        if forecast_source == "NO_FORECAST":
+            combined_df = calculate_forecast(part_monthly)
+            combined_df['Forecast'] = 0
+        elif forecast_source == "PART_LEVEL":
             combined_df = calculate_forecast(part_monthly)
         else:
+            # Sparse / Dormant fallback logic
             df = get_cached_df()
             cat_col = next((c for c in df.columns if str(c).lower() in ['category', 'halb']), None)
             category_name = None
@@ -126,29 +168,77 @@ async def get_monthly_demand(part_no: str = None):
                 if not part_rows.empty:
                     category_name = part_rows.iloc[0][cat_col]
             
+            actual_fallback = "GLOBAL_FALLBACK"
+            fallback_monthly = get_monthly_demand_df(part_no="ALL_PARTS")
+
+            # Enforce HALB-first: only use if category data is actually sufficient
             if category_name and str(category_name).strip() != 'nan':
-                forecast_source = "HALB_FALLBACK"
-                fallback_monthly = get_monthly_demand_df(category=category_name)
-            else:
-                forecast_source = "GLOBAL_FALLBACK"
-                fallback_monthly = get_monthly_demand_df(part_no="ALL_PARTS")
+                halb_monthly = get_monthly_demand_df(category=category_name)
+                if not halb_monthly.empty and halb_monthly['Demand'].sum() > 0:
+                    actual_fallback = "HALB_FALLBACK"
+                    fallback_monthly = halb_monthly
+            
+            if sku_state == "SPARSE":
+                forecast_source = actual_fallback
                 
             fallback_forecasted = calculate_forecast(fallback_monthly)
             
-            part_sum = part_monthly['Demand'].sum()
-            fallback_sum = fallback_monthly['Demand'].sum()
-            ratio = part_sum / fallback_sum if fallback_sum > 0 else 0
+            # 1. Base structure for the part
+            combined_df = calculate_forecast(part_monthly)
             
-            combined_df = fallback_forecasted.copy()
-            combined_df = combined_df.drop(columns=['Demand'])
-            combined_df = combined_df.merge(part_monthly[['MonthDT', 'Demand']], on='MonthDT', how='left')
+            # Match fallback trend to combined_df
+            fallback_forecasted_sub = fallback_forecasted[['MonthDT', 'Forecast']].rename(columns={'Forecast': 'Fallback_Forecast'})
+            combined_df = combined_df.merge(fallback_forecasted_sub, on='MonthDT', how='left')
             
-            last_hist_date = part_monthly['MonthDT'].max() if not part_monthly.empty else combined_df['MonthDT'].max()
-            hist_mask = combined_df['MonthDT'] <= last_hist_date
-            combined_df.loc[hist_mask, 'Demand'] = combined_df.loc[hist_mask, 'Demand'].fillna(0)
+            # 2. Extract Fallback Trend Direction (Slope multiplier instead of raw amplitude)
+            fallback_hist = fallback_monthly['Demand'].tail(6)
+            fallback_baseline = fallback_hist.mean() if not fallback_hist.empty and fallback_hist.mean() > 0 else 1.0
+            trend_multiplier = (combined_df['Fallback_Forecast'] / fallback_baseline).fillna(1.0).clip(lower=0.5, upper=2.0)
             
-            combined_df['Forecast'] = combined_df['Forecast'] * ratio
-            combined_df['Is_Future'] = combined_df['MonthDT'] > last_hist_date
+            # 3. Preserve SKU Historical Scale
+            non_zero_demand = part_monthly[part_monthly['Demand'] > 0]['Demand']
+            recent_sparse_baseline = non_zero_demand.tail(3).mean() if not non_zero_demand.empty else 0
+            sku_max = non_zero_demand.max() if not non_zero_demand.empty else 0
+            
+            # 4. Generate Scaled Sparse Forecast (Baseline * Trend Direction)
+            raw_scaled_forecast = recent_sparse_baseline * trend_multiplier
+            
+            # 5. Intermittent Demand Behavior (Future Only)
+            is_future_mask = combined_df['Is_Future']
+            num_future = is_future_mask.sum()
+            
+            if num_future > 0:
+                # Seed with part_no to ensure identical random curves on page refresh
+                seed_val = sum(ord(c) for c in str(part_no)) if part_no else 42
+                rng = np.random.RandomState(seed_val % 10000)
+                
+                # Probability of a demand spike (min 10%, max 90%)
+                prob_demand = max(0.1, min(0.9, 1.0 - sparsity_ratio))
+                
+                random_draws = rng.uniform(0, 1, size=num_future)
+                intermittent_mask = (random_draws < prob_demand).astype(float)
+                
+                # Ensure at least one spike to avoid a completely dead future
+                if intermittent_mask.sum() == 0:
+                    intermittent_mask[rng.randint(0, num_future)] = 1.0
+                
+                # Volume preserving spike scaling (maintains mathematical expectation under the curve)
+                spike_multiplier = 1.0 / prob_demand
+                future_forecasts = raw_scaled_forecast[is_future_mask] * intermittent_mask * spike_multiplier
+                
+                # 6. Amplitude Safeguard (Never allow forecast to explode past historical scale constraints)
+                forecast_cap = max(sku_max * 1.5, recent_sparse_baseline * 2.0)
+                if forecast_cap == 0:
+                    forecast_cap = 1.0
+                    
+                future_forecasts = future_forecasts.clip(upper=forecast_cap)
+                combined_df.loc[is_future_mask, 'Forecast'] = future_forecasts
+                
+            # Cap historical forecast as well to avoid misleading visuals
+            hist_cap = max(sku_max * 1.5, recent_sparse_baseline * 2.0)
+            combined_df.loc[~is_future_mask, 'Forecast'] = combined_df.loc[~is_future_mask, 'Forecast'].clip(upper=hist_cap)
+
+            combined_df = combined_df.drop(columns=['Fallback_Forecast'])
     
     # Select columns for the final result
     result_df = combined_df[['Month', 'Demand', 'Forecast', 'Is_Future']].copy()
@@ -160,6 +250,8 @@ async def get_monthly_demand(part_no: str = None):
     return {
         "items": result_df.to_dict(orient="records"),
         "source": forecast_source,
+        "sku_state": sku_state,
+        "confidence": confidence,
         "sparsity": round(sparsity_ratio, 2)
     }
 
