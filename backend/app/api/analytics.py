@@ -256,12 +256,49 @@ async def get_monthly_demand(part_no: str = None):
     }
 
 
+@router.get("/inventory/filters")
+async def get_inventory_filters():
+    df = get_cached_df()
+    if df is None or df.empty or 'Month' not in df.columns:
+        return {"months": [], "years": []}
+    try:
+        # Extract all valid parsed month strings
+        valid_months = df['Month'].dropna().astype(str)
+        valid_months = valid_months[valid_months.str.contains('-')]
+        if valid_months.empty:
+            return {"months": [], "years": []}
+            
+        month_year = valid_months.str.split('-', n=1, expand=True)
+        unique_months = month_year[0].unique().tolist()
+        unique_years = month_year[1].unique().tolist()
+        
+        # Sort chronologically
+        month_order = {m: i for i, m in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])}
+        months = sorted(unique_months, key=lambda x: month_order.get(x[:3], 99))
+        years = sorted(unique_years, reverse=True)
+        
+        return {"months": months, "years": years}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/inventory")
-async def get_inventory(page: int = 1, limit: int = 20, search: str = ""):
+async def get_inventory(page: int = 1, limit: int = 20, search: str = "", month: str = "", year: str = ""):
     df = get_cached_df()
     if df is None or df.empty:
         return {"items": [], "total": 0, "columns": []}
     try:
+        df = df.copy()
+        
+        # Apply Month/Year Slicers
+        if 'Month' in df.columns:
+            if month and year:
+                df = df[df['Month'].astype(str) == f"{month}-{year}"]
+            elif month:
+                df = df[df['Month'].astype(str).str.startswith(f"{month}-")]
+            elif year:
+                df = df[df['Month'].astype(str).str.endswith(f"-{year}")]
+
         if search:
             # Fast vectorized case-insensitive string matching across all columns
             mask = np.column_stack([

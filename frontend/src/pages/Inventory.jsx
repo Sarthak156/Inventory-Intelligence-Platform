@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BoxSelect, Database, Loader2, Search as SearchIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { BoxSelect, Database, Loader2, Search as SearchIcon, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import API from "../services/api";
 
@@ -10,14 +10,31 @@ const Inventory = () => {
   const [loading, setLoading] = useState(true);
   const [isFetchingPage, setIsFetchingPage] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [availableMonths, setAvailableMonths] = useState([]);
+  const [availableYears, setAvailableYears] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const res = await API.get("/inventory/filters");
+        setAvailableMonths(res.data.months || []);
+        setAvailableYears(res.data.years || []);
+      } catch (err) {
+        console.error("Failed to fetch filters:", err);
+      }
+    };
+    fetchFilters();
+  }, []);
 
   useEffect(() => {
     const fetchInventory = async () => {
       setIsFetchingPage(true);
       try {
-        const response = await API.get(`/inventory?page=${currentPage}&limit=${itemsPerPage}&search=${encodeURIComponent(searchTerm)}`);
+        const response = await API.get(`/inventory?page=${currentPage}&limit=${itemsPerPage}&search=${encodeURIComponent(searchTerm)}&month=${encodeURIComponent(selectedMonth)}&year=${encodeURIComponent(selectedYear)}`);
         setInventoryData(response.data.items || []);
         setTotalItems(response.data.total || 0);
         if (response.data.columns) {
@@ -33,11 +50,11 @@ const Inventory = () => {
     
     const timer = setTimeout(() => fetchInventory(), 300);
     return () => clearTimeout(timer);
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, selectedMonth, selectedYear]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, selectedMonth, selectedYear]);
 
   if (loading) {
     return (
@@ -80,16 +97,45 @@ const Inventory = () => {
           <p className="text-sm theme-muted mt-1">Real-time telemetry and aggregated metrics for active spare parts.</p>
         </div>
         
-        {/* Search Input */}
-        <div className="relative">
-          <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 theme-muted" />
-          <input
-            type="text"
-            placeholder="Search specific part..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 theme-bg-input border theme-border rounded-xl focus:outline-none focus:theme-cyan-border text-sm theme-text w-full md:w-64"
-          />
+        {/* Filters Area */}
+        <div className="flex flex-col md:flex-row gap-3">
+          {/* Month Slicer */}
+          <div className="relative">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="pl-4 pr-10 py-2 theme-bg-input border theme-border rounded-xl focus:outline-none focus:theme-cyan-border text-sm theme-text appearance-none cursor-pointer w-full md:w-36"
+            >
+              <option value="">All Months</option>
+              {availableMonths.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 theme-muted pointer-events-none" />
+          </div>
+
+          {/* Year Slicer */}
+          <div className="relative">
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="pl-4 pr-10 py-2 theme-bg-input border theme-border rounded-xl focus:outline-none focus:theme-cyan-border text-sm theme-text appearance-none cursor-pointer w-full md:w-32"
+            >
+              <option value="">All Years</option>
+              {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 theme-muted pointer-events-none" />
+          </div>
+
+          {/* Search Input */}
+          <div className="relative">
+            <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 theme-muted" />
+            <input
+              type="text"
+              placeholder="Search specific part..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 theme-bg-input border theme-border rounded-xl focus:outline-none focus:theme-cyan-border text-sm theme-text w-full md:w-64"
+            />
+          </div>
         </div>
       </div>
 
