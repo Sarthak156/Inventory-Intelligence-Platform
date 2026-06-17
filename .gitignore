@@ -67,3 +67,6 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+data/
+backend\data
