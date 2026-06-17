@@ -4,7 +4,8 @@ import {
   FileSpreadsheet,
   CheckCircle2,
   AlertCircle,
-  Loader2
+  Loader2,
+  ChevronDown
 } from "lucide-react";
 
 import API from "../services/api";
@@ -26,9 +27,13 @@ export default function Upload() {
     setDatasetPreview
   } = useContext(DataContext);
 
-  const [fileId, setFileId] = useState(null);
-  const [sheets, setSheets] = useState([]);
-  const [selectedSheet, setSelectedSheet] = useState("");
+  const [fileName, setFileName] = useState(() => sessionStorage.getItem('fileName') || null);
+  const [fileId, setFileId] = useState(() => sessionStorage.getItem('fileId') || null);
+  const [sheets, setSheets] = useState(() => {
+    const saved = sessionStorage.getItem('sheets');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [selectedSheet, setSelectedSheet] = useState(() => sessionStorage.getItem('selectedSheet') || "");
   const [processing, setProcessing] = useState(false);
 
   const handleUpload = async () => {
@@ -50,9 +55,13 @@ export default function Upload() {
       );
 
       setFileId(response.data.file_id);
+      sessionStorage.setItem('fileId', response.data.file_id);
+      sessionStorage.setItem('fileName', file.name);
       setSheets(response.data.sheets);
+      sessionStorage.setItem('sheets', JSON.stringify(response.data.sheets));
       if (response.data.sheets && response.data.sheets.length > 0) {
         setSelectedSheet(response.data.sheets[0]);
+        sessionStorage.setItem('selectedSheet', response.data.sheets[0]);
       }
       setDatasetPreview(null);
 
@@ -96,17 +105,22 @@ export default function Upload() {
     e.preventDefault();
     e.stopPropagation();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setFile(e.dataTransfer.files[0]);
+      const selectedFile = e.dataTransfer.files[0];
+      setFile(selectedFile);
+      setFileName(selectedFile.name);
       setFileId(null);
       setSheets([]);
       setDatasetPreview(null);
+      sessionStorage.removeItem('fileId');
+      sessionStorage.removeItem('sheets');
+      sessionStorage.removeItem('selectedSheet');
+      sessionStorage.removeItem('fileName');
     }
   };
 
 
   return (<div className="max-w-6xl mx-auto mt-10">
 
-    ```
     <div className="mb-8 text-center">
       <h1 className="text-3xl font-light theme-text tracking-tight mb-2">
         Data Ingestion Center
@@ -152,10 +166,18 @@ export default function Upload() {
           className="hidden"
           id="dataset-upload"
           onChange={(e) => {
-            setFile(e.target.files[0]);
-            setFileId(null);
-            setSheets([]);
-            setDatasetPreview(null);
+            const selectedFile = e.target.files[0];
+            if (selectedFile) {
+              setFile(selectedFile);
+              setFileName(selectedFile.name);
+              setFileId(null);
+              setSheets([]);
+              setDatasetPreview(null);
+              sessionStorage.removeItem('fileId');
+              sessionStorage.removeItem('sheets');
+              sessionStorage.removeItem('selectedSheet');
+              sessionStorage.removeItem('fileName');
+            }
           }}
         />
 
@@ -163,10 +185,10 @@ export default function Upload() {
           htmlFor="dataset-upload"
           className="theme-button-cyan px-8 py-3 rounded-xl font-medium tracking-wide transition-all duration-300 text-sm cursor-pointer"
         >
-          Select Dataset
+          {file || fileId ? "Change Dataset" : "Select Dataset"}
         </label>
 
-        {file && (
+        {(file || fileName) && (
           <div className="mt-6 flex items-center gap-3 text-sm theme-text">
 
             <FileSpreadsheet
@@ -174,7 +196,7 @@ export default function Upload() {
               className="theme-cyan"
             />
 
-            <span>{file.name}</span>
+            <span>{file ? file.name : fileName}</span>
 
           </div>
         )}
@@ -206,17 +228,27 @@ export default function Upload() {
             <label className="block text-sm font-medium theme-text mb-2 text-left">
               Select Sheet to Process
             </label>
-            <select
-              value={selectedSheet}
-              onChange={(e) => setSelectedSheet(e.target.value)}
-              className="w-full theme-bg-card-soft border theme-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4 theme-text appearance-none"
-            >
-              {sheets.map((sheet) => (
-                <option key={sheet} value={sheet} className="bg-gray-900 text-white">
-                  {sheet}
-                </option>
-              ))}
-            </select>
+            <div className="relative mb-4">
+              <select
+                value={selectedSheet}
+                onChange={(e) => {
+                  setSelectedSheet(e.target.value);
+                  sessionStorage.setItem('selectedSheet', e.target.value);
+                  setDatasetPreview(null);
+                  setErrorMsg(null);
+                }}
+                className="w-full theme-bg-card-soft border theme-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 theme-text appearance-none pr-10 cursor-pointer"
+              >
+                {sheets.map((sheet) => (
+                  <option key={sheet} value={sheet} className="bg-gray-900 text-white">
+                    {sheet}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                <ChevronDown size={18} className="theme-muted" />
+              </div>
+            </div>
 
             <button
               onClick={handleProcessSheet}

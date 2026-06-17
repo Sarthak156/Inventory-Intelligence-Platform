@@ -1,7 +1,9 @@
 import pandas as pd
+import numpy as np
 
 def transform_dataset(df):
 
+    # 1. Check if the dataset is already in long format
     # 1. Check if the dataset is already in long format
     if "Month" in df.columns and "Demand" in df.columns:
         df_long = df.copy()
@@ -11,7 +13,8 @@ def transform_dataset(df):
         exclude_cols_lower = [
             "part no", "total_demand", "total demand", "total",
             "part description", "description", "desc", "item description",
-            "category", "name", "sku"
+            "category", "name", "sku", "material description", 
+            "material descripton"
         ]
 
         month_columns = [
@@ -27,8 +30,9 @@ def transform_dataset(df):
             value_name="Demand"
         )
 
-    # Force Demand to be numeric, turning text/errors into 0
-    df_long["Demand"] = pd.to_numeric(df_long["Demand"], errors="coerce").fillna(0)
+    # Force Demand to be numeric, handle infinities, and fill nulls with 0
+    df_long["Demand"] = pd.to_numeric(df_long["Demand"], errors="coerce")
+    df_long["Demand"] = df_long["Demand"].replace([np.inf, -np.inf], np.nan).fillna(0)
 
     # Try to parse the Month column as datetime
     parsed_months = pd.to_datetime(

@@ -6,6 +6,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 # Import your routers
 from app.api import upload
 from app.api import analytics # <-- 1. Import the analytics file
+from app.api.forecast import router as forecast_router
+
 
 app = FastAPI()
 
@@ -40,3 +42,4 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 # Register the routers with your FastAPI app
 app.include_router(upload.router)
 app.include_router(analytics.router) # <-- 2. Register the analytics router
+app.include_router(forecast_router)

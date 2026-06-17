@@ -102,14 +102,18 @@ async def process_sheet(request: ProcessSheetRequest):
             total_demand = float(demand_sum) if pd.notna(demand_sum) else 0.0
             
         # Clean data for strict JSON compliance (prevents Axios errors)
-        preview_df = transformed_df.head(20).replace([np.inf, -np.inf], np.nan).fillna("")
+        preview_df = transformed_df.head(20).copy()
+        
+        preview_df = preview_df.replace([np.inf, -np.inf], np.nan)
+        preview_df = preview_df.astype(object).where(pd.notna(preview_df), None)
+        preview_records = preview_df.to_dict(orient="records")
 
         return {
             "total_rows": len(transformed_df),
             "columns": list(transformed_df.columns),
             "total_parts": total_parts,
             "total_demand": total_demand,
-            "sample_data": preview_df.to_dict(orient="records")
+            "sample_data": preview_records
         }
     except Exception as e:
         return JSONResponse(

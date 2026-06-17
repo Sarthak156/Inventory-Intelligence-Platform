@@ -5,24 +5,35 @@ import API from "../services/api";
 
 const Inventory = () => {
   const [inventoryData, setInventoryData] = useState([]);
+  const [columns, setColumns] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isFetchingPage, setIsFetchingPage] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
   useEffect(() => {
     const fetchInventory = async () => {
+      setIsFetchingPage(true);
       try {
-        const response = await API.get("/inventory");
-        setInventoryData(response.data || []);
+        const response = await API.get(`/inventory?page=${currentPage}&limit=${itemsPerPage}&search=${encodeURIComponent(searchTerm)}`);
+        setInventoryData(response.data.items || []);
+        setTotalItems(response.data.total || 0);
+        if (response.data.columns) {
+          setColumns(response.data.columns);
+        }
       } catch (error) {
         console.error("Failed to fetch inventory data:", error);
       } finally {
         setLoading(false);
+        setIsFetchingPage(false);
       }
     };
-    fetchInventory();
-  }, []);
+    
+    const timer = setTimeout(() => fetchInventory(), 300);
+    return () => clearTimeout(timer);
+  }, [currentPage, searchTerm]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -36,7 +47,7 @@ const Inventory = () => {
     );
   }
 
-  if (!inventoryData || inventoryData.length === 0) {
+  if (totalItems === 0 && !searchTerm) {
     return (
       <div className="h-full min-h-[80vh] flex flex-col items-center justify-center p-8 relative">
         <div className="max-w-md w-full theme-bg-card backdrop-blur-md rounded-3xl theme-card-shadow border theme-border p-10 text-center transition-all">
@@ -59,18 +70,7 @@ const Inventory = () => {
     );
   }
 
-  const filteredData = inventoryData.filter(row => {
-    if (!searchTerm) return true;
-    return Object.values(row).some(val => 
-      String(val).toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  // Dynamically extract columns from the JSON keys
-  const columns = Object.keys(inventoryData[0]);
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   return (
     <div className="p-8 flex flex-col gap-6">
@@ -93,7 +93,12 @@ const Inventory = () => {
         </div>
       </div>
 
-      <div className="theme-bg-card border theme-border rounded-2xl backdrop-blur-md overflow-hidden theme-card-shadow">
+      <div className="theme-bg-card border theme-border rounded-2xl backdrop-blur-md overflow-hidden theme-card-shadow relative">
+        {isFetchingPage && (
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] z-10 flex items-center justify-center">
+            <Loader2 size={24} className="theme-cyan animate-spin" />
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="uppercase tracking-widest text-[10px] theme-bg-card-soft theme-muted border-b theme-border">
@@ -104,7 +109,7 @@ const Inventory = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((row, rowIndex) => (
+              {inventoryData.map((row, rowIndex) => (
                 <tr key={rowIndex} className="border-b theme-border last:border-b-0 hover:theme-cyan-bg transition-colors duration-200 theme-text">
                   {columns.map((col) => (
                     <td key={col} className="px-6 py-4">{row[col] === null ? '-' : String(row[col])}</td>
@@ -116,10 +121,10 @@ const Inventory = () => {
         </div>
         
         {/* Pagination Controls */}
-        {filteredData.length > 0 && (
+        {inventoryData.length > 0 && (
           <div className="flex items-center justify-between px-6 py-4 border-t theme-border theme-bg-card-soft">
             <div className="text-sm theme-muted">
-              Showing <span className="font-medium theme-text">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium theme-text">{Math.min(currentPage * itemsPerPage, filteredData.length)}</span> of <span className="font-medium theme-text">{filteredData.length}</span> entries
+              Showing <span className="font-medium theme-text">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium theme-text">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of <span className="font-medium theme-text">{totalItems}</span> entries
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -140,7 +145,7 @@ const Inventory = () => {
           </div>
         )}
         
-        {filteredData.length === 0 && (
+        {inventoryData.length === 0 && !isFetchingPage && (
           <div className="p-8 text-center theme-muted text-sm">
             No entries found matching "{searchTerm}"
           </div>
