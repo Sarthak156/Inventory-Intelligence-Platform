@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { ShieldAlert, AlertTriangle, CheckCircle2, Loader2, X, LineChart as LineChartIcon, Activity, Flame, Search as SearchIcon, ArrowUpDown, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import API from "../services/api";
 
 const Risks = () => {
@@ -116,7 +116,7 @@ const Risks = () => {
 
       {/* Most Critical Alert */}
       {mostCritical && (
-        <div className="relative overflow-hidden rounded-2xl p-6 border border-rose-500/30 bg-gradient-to-r from-rose-500/10 to-transparent flex flex-col md:flex-row items-center gap-6 group hover:border-rose-500/50 transition-colors">
+        <div className="relative overflow-hidden rounded-2xl p-6 border border-rose-500/30 bg-gradient-to-r from-rose-500/10 to-transparent flex flex-col md:flex-row items-center gap-6 group hover:border-rose-500/60 hover:shadow-[0_0_30px_rgba(244,63,94,0.15)] hover:-translate-y-1 transition-all duration-500 cursor-pointer" onClick={() => handleRowClick(mostCritical)}>
           <div className="w-16 h-16 rounded-full flex items-center justify-center bg-rose-500/20 border border-rose-500/30 shrink-0 relative">
             <div className="absolute inset-0 rounded-full animate-ping bg-rose-500/20"></div>
             <Flame size={32} className="text-rose-500 relative z-10" />
@@ -125,7 +125,7 @@ const Risks = () => {
             <p className="text-rose-400 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
               Most Critical Inventory Alert
             </p>
-            <h3 className="text-2xl font-light text-white mb-2 cursor-pointer hover:text-cyan-400 transition-colors" onClick={() => handleRowClick(mostCritical)}>
+            <h3 className="text-2xl font-bold text-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)] mb-2 group-hover:text-rose-400 transition-all duration-300">
               Part No: {mostCritical["Part No"]}
             </h3>
             <div className="flex flex-wrap items-center gap-3">
@@ -148,7 +148,7 @@ const Risks = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div 
           onClick={() => { setSelectedRisk(selectedRisk === "HIGH" ? "ALL" : "HIGH"); setCurrentPage(1); }}
-          className={`theme-bg-card border ${selectedRisk === "HIGH" ? "theme-cyan-border shadow-[0_0_15px_rgba(34,211,238,0.15)]" : "theme-border"} rounded-2xl p-5 backdrop-blur-md group hover:theme-cyan-border transition-all duration-300 cursor-pointer`}
+          className={`theme-bg-card border ${selectedRisk === "HIGH" ? "border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.2)]" : "theme-border"} rounded-2xl p-5 backdrop-blur-md group hover:border-rose-500/60 hover:shadow-[0_0_25px_rgba(244,63,94,0.15)] hover:-translate-y-1 transition-all duration-500 cursor-pointer`}
         >
           <div className="flex justify-between items-start mb-4">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center border border-rose-500/20 bg-rose-500/10">
@@ -163,7 +163,7 @@ const Risks = () => {
         
         <div 
           onClick={() => { setSelectedRisk(selectedRisk === "MEDIUM" ? "ALL" : "MEDIUM"); setCurrentPage(1); }}
-          className={`theme-bg-card border ${selectedRisk === "MEDIUM" ? "theme-cyan-border shadow-[0_0_15px_rgba(34,211,238,0.15)]" : "theme-border"} rounded-2xl p-5 backdrop-blur-md group hover:theme-cyan-border transition-all duration-300 cursor-pointer`}
+          className={`theme-bg-card border ${selectedRisk === "MEDIUM" ? "border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]" : "theme-border"} rounded-2xl p-5 backdrop-blur-md group hover:border-amber-500/60 hover:shadow-[0_0_25px_rgba(245,158,11,0.15)] hover:-translate-y-1 transition-all duration-500 cursor-pointer`}
         >
           <div className="flex justify-between items-start mb-4">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center border border-amber-500/20 bg-amber-500/10">
@@ -178,7 +178,7 @@ const Risks = () => {
 
         <div 
           onClick={() => { setSelectedRisk(selectedRisk === "LOW" ? "ALL" : "LOW"); setCurrentPage(1); }}
-          className={`theme-bg-card border ${selectedRisk === "LOW" ? "theme-cyan-border shadow-[0_0_15px_rgba(34,211,238,0.15)]" : "theme-border"} rounded-2xl p-5 backdrop-blur-md group hover:theme-cyan-border transition-all duration-300 cursor-pointer`}
+          className={`theme-bg-card border ${selectedRisk === "LOW" ? "border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]" : "theme-border"} rounded-2xl p-5 backdrop-blur-md group hover:border-emerald-500/60 hover:shadow-[0_0_25px_rgba(16,185,129,0.15)] hover:-translate-y-1 transition-all duration-500 cursor-pointer`}
         >
           <div className="flex justify-between items-start mb-4">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center border border-emerald-500/20 bg-emerald-500/10">
@@ -217,7 +217,9 @@ const Risks = () => {
                   dataKey="value"
                   stroke="none"
                   onClick={(data) => { setSelectedRisk(selectedRisk === data.name ? "ALL" : data.name); setCurrentPage(1); }}
-                  className="cursor-pointer outline-none"
+                  className="cursor-pointer outline-none hover:opacity-80 transition-opacity duration-300"
+                  animationDuration={1500}
+                  animationEasing="ease-out"
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -253,7 +255,14 @@ const Risks = () => {
               <div 
                 key={d.name}
                 onClick={() => { setSelectedRisk(selectedRisk === d.name ? "ALL" : d.name); setCurrentPage(1); }}
-                className={`flex items-center gap-3 theme-bg-card-soft border ${selectedRisk === d.name ? 'theme-cyan-border shadow-[0_0_10px_rgba(34,211,238,0.15)]' : 'theme-border'} px-5 py-2 rounded-xl cursor-pointer hover:theme-cyan-border transition-all`}
+                className={`flex items-center gap-3 theme-bg-card-soft border ${
+                  selectedRisk === d.name 
+                    ? (d.name === 'HIGH' ? 'border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : d.name === 'MEDIUM' ? 'border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]')
+                    : 'theme-border'
+                } px-5 py-2 rounded-xl cursor-pointer hover:-translate-y-0.5 transition-all duration-300 ${
+                  d.name === 'HIGH' ? 'hover:border-rose-500/60 hover:shadow-[0_0_20px_rgba(244,63,94,0.15)]' :
+                  d.name === 'MEDIUM' ? 'hover:border-amber-500/60 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]' :
+                  'hover:border-emerald-500/60 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]'}`}
               >
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }}></div>
                 <div className="flex flex-col text-left">
@@ -337,9 +346,9 @@ const Risks = () => {
                   <tr 
                     key={idx} 
                     onClick={() => handleRowClick(row)}
-                    className="border-b theme-border last:border-0 hover:theme-cyan-bg transition-colors duration-200 cursor-pointer"
+                    className="border-b theme-border last:border-0 hover:bg-cyan-500/5 hover:shadow-[inset_0_0_20px_rgba(34,211,238,0.05)] transition-all duration-300 cursor-pointer group"
                   >
-                    <td className="px-6 py-4 font-medium theme-text group-hover:text-cyan-400">{row["Part No"]}</td>
+                    <td className="px-6 py-4 font-medium theme-text group-hover:text-cyan-400 group-hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)] transition-all duration-300">{row["Part No"]}</td>
                     <td className="px-6 py-4">
                       <span className={`text-[10px] px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider border ${
                         row.Risk === 'HIGH' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
@@ -352,7 +361,7 @@ const Risks = () => {
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1 max-w-[150px]">
                         {row.Reasons?.map((reason, i) => (
-                          <span key={i} className="text-[9px] px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-semibold tracking-wider hover:shadow-[0_0_8px_rgba(34,211,238,0.4)] hover:-translate-y-0.5 transition-all duration-300 cursor-default">
+                          <span key={i} className="text-[9px] px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-semibold tracking-wider hover:text-cyan-300 hover:shadow-[0_0_10px_rgba(34,211,238,0.6)] hover:-translate-y-0.5 transition-all duration-300 cursor-default">
                             {reason}
                           </span>
                         ))}
@@ -404,8 +413,8 @@ const Risks = () => {
 
       {/* Sku Details Modal Panel */}
       {selectedSku && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="theme-bg-card border theme-border rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-500">
+          <div className="theme-bg-card border theme-border rounded-2xl w-full max-w-4xl shadow-[0_0_50px_rgba(0,0,0,0.4)] flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-500 ease-out" onClick={e => e.stopPropagation()}>
              {/* Modal Header */}
              <div className="flex justify-between items-center p-6 border-b theme-border">
                <div>
@@ -459,7 +468,7 @@ const Risks = () => {
                    <p className="text-xs theme-muted uppercase tracking-wider mb-3">Risk Factors Identified</p>
                    <div className="flex flex-wrap gap-2">
                      {selectedSku.Reasons.map((r, i) => (
-                       <span key={i} className="text-xs px-3 py-1.5 rounded border border-rose-500/30 bg-rose-500/10 text-rose-400 font-semibold tracking-wide flex items-center gap-1.5 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] hover:-translate-y-0.5 transition-all duration-300 cursor-default">
+                       <span key={i} className="text-xs px-3 py-1.5 rounded border border-rose-500/30 bg-rose-500/10 text-rose-400 font-semibold tracking-wide flex items-center gap-1.5 hover:text-rose-300 hover:shadow-[0_0_15px_rgba(244,63,94,0.6)] hover:-translate-y-0.5 transition-all duration-300 cursor-default">
                          <AlertTriangle size={14} />
                          {r}
                        </span>
@@ -490,8 +499,8 @@ const Risks = () => {
                             itemStyle={{ color: 'var(--theme-text)' }}
                             labelStyle={{ color: 'var(--theme-cyan)', marginBottom: '4px' }}
                           />
-                          <Line type="monotone" dataKey="Demand" name="Historical Demand" stroke="var(--theme-cyan)" strokeWidth={3} dot={false} />
-                          <Line type="monotone" dataKey="Forecast" name="AI Forecast" stroke="#8b5cf6" strokeWidth={3} strokeDasharray="6 6" dot={false} />
+                          <Line type="monotone" dataKey="Demand" name="Historical Demand" stroke="var(--theme-cyan)" strokeWidth={3} dot={false} animationDuration={2000} animationEasing="ease-out" />
+                          <Line type="monotone" dataKey="Forecast" name="AI Forecast" stroke="#8b5cf6" strokeWidth={3} strokeDasharray="6 6" dot={false} animationDuration={2000} animationEasing="ease-out" />
                         </LineChart>
                      </ResponsiveContainer>
                    ) : (
@@ -513,7 +522,12 @@ const Risks = () => {
                              'bg-gray-500/10 text-gray-400 border-gray-500/20'
                            }`}>{skuDemandData.confidence}</strong>
                            <div className="w-24 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                             <div className={`h-full rounded-full transition-all duration-1000 ${skuDemandData.confidence === 'HIGH' ? 'bg-emerald-500' : skuDemandData.confidence === 'MEDIUM' ? 'bg-amber-500' : skuDemandData.confidence === 'LOW' ? 'bg-rose-500' : 'bg-gray-500'}`} style={{ width: `${skuDemandData.confidence_score || 0}%` }}></div>
+                             <div className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                               skuDemandData.confidence === 'HIGH' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 
+                               skuDemandData.confidence === 'MEDIUM' ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]' : 
+                               skuDemandData.confidence === 'LOW' ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]' : 
+                               'bg-gray-500 shadow-[0_0_10px_rgba(107,114,128,0.8)]'
+                             }`} style={{ width: `${skuDemandData.confidence_score || 0}%` }}></div>
                            </div>
                            <span className="text-[10px] theme-text font-bold">
                              {skuDemandData.confidence_score || 0}%
