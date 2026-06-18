@@ -52,10 +52,6 @@ const Inventory = () => {
     return () => clearTimeout(timer);
   }, [currentPage, searchTerm, selectedMonth, selectedYear]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedMonth, selectedYear]);
-
   if (loading) {
     return (
       <div className="h-full min-h-[80vh] flex flex-col items-center justify-center p-8">
@@ -103,7 +99,10 @@ const Inventory = () => {
           <div className="relative">
             <select
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+                setCurrentPage(1);
+              }}
               className="pl-4 pr-10 py-2 theme-bg-input border theme-border rounded-xl focus:outline-none focus:theme-cyan-border text-sm theme-text appearance-none cursor-pointer w-full md:w-36"
             >
               <option value="">All Months</option>
@@ -116,7 +115,10 @@ const Inventory = () => {
           <div className="relative">
             <select
               value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
+              onChange={(e) => {
+                setSelectedYear(e.target.value);
+                setCurrentPage(1);
+              }}
               className="pl-4 pr-10 py-2 theme-bg-input border theme-border rounded-xl focus:outline-none focus:theme-cyan-border text-sm theme-text appearance-none cursor-pointer w-full md:w-32"
             >
               <option value="">All Years</option>
@@ -132,7 +134,10 @@ const Inventory = () => {
               type="text"
               placeholder="Search specific part..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="pl-10 pr-4 py-2 theme-bg-input border theme-border rounded-xl focus:outline-none focus:theme-cyan-border text-sm theme-text w-full md:w-64"
             />
           </div>

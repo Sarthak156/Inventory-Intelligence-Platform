@@ -130,6 +130,7 @@ async def get_monthly_demand(part_no: str = None):
         sku_state = "GLOBAL"
         forecast_source = "GLOBAL_AGGREGATED"
         confidence = "HIGH"
+        confidence_score = 95
         combined_df = calculate_forecast(part_monthly)
     else:
         total_demand = part_monthly['Demand'].sum()
@@ -139,18 +140,31 @@ async def get_monthly_demand(part_no: str = None):
             sku_state = "INACTIVE"
             forecast_source = "NO_FORECAST"
             confidence = "NONE"
+            confidence_score = 0
         elif non_zero <= 2:
             sku_state = "DORMANT"
             forecast_source = "LOW_CONFIDENCE"
             confidence = "LOW"
+            confidence_score = max(15, int(35 - (sparsity_ratio * 20)))
         elif sparsity_ratio > 0.7 or non_zero < 6:
             sku_state = "SPARSE"
             forecast_source = "HALB_FALLBACK" # Intent; might fall back to global
             confidence = "MEDIUM"
+            confidence_score = max(45, int(75 - (sparsity_ratio * 30)))
         else:
             sku_state = "ACTIVE"
             forecast_source = "PART_LEVEL"
             confidence = "HIGH"
+            
+            # Calculate a stable score based on variance (Volatility)
+            demand_vals = part_monthly['Demand'].values
+            mean_val = np.mean(demand_vals)
+            std_val = np.std(demand_vals)
+            cv = (std_val / mean_val) if mean_val > 0 else 1.0
+            
+            # Start at 99%, penalize for volatility and sparsity
+            calculated_score = int(99 - (min(cv, 2.0) * 10) - (sparsity_ratio * 15))
+            confidence_score = max(75, min(99, calculated_score))
 
         # STEP 2: Choose Forecasting Strategy
         if forecast_source == "NO_FORECAST":
@@ -243,6 +257,9 @@ async def get_monthly_demand(part_no: str = None):
     # Select columns for the final result
     result_df = combined_df[['Month', 'Demand', 'Forecast', 'Is_Future']].copy()
 
+    # Round forecast to nearest integer
+    result_df['Forecast'] = result_df['Forecast'].round()
+
     # Fast vectorized replacement of Infs and NaNs to None for JSON compliance
     result_df = result_df.replace([np.inf, -np.inf], np.nan)
     result_df = result_df.astype(object).where(pd.notna(result_df), None)
@@ -252,7 +269,8 @@ async def get_monthly_demand(part_no: str = None):
         "source": forecast_source,
         "sku_state": sku_state,
         "confidence": confidence,
-        "sparsity": round(sparsity_ratio, 2)
+        "sparsity": round(sparsity_ratio, 2),
+        "confidence_score": confidence_score
     }
 
 
@@ -339,3 +357,15 @@ async def get_parts():
         return []
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading parts: {str(e)}")
+
+@router.get("/inventory-risk")
+async def get_inventory_risk():
+    from app.services.risk_engine import calculate_inventory_risk
+    df = get_cached_df()
+    if df is None or df.empty:
+        return []
+    try:
+        risk_data = calculate_inventory_risk(df)
+        return risk_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

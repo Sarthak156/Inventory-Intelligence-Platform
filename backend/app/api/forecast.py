@@ -41,6 +41,7 @@ def forecast_demand():
         monthly["Demand"]
         .rolling(window=3)
         .mean()
+        .round()
     )
 
     # Fill initial null forecasts
