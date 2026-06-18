@@ -69,3 +69,9 @@ tmp/
 temp/
 
 data/
+# Data files
+backend/data/
+datasets/
+*.csv
+*.xlsx
+*.xls
