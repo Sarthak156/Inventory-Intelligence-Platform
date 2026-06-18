@@ -3,6 +3,35 @@ import { ShieldAlert, AlertTriangle, CheckCircle2, Loader2, X, LineChart as Line
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import API from "../services/api";
 
+const AnimatedCounter = ({ value, prefix = "", suffix = "", decimals = 0, format = false }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const end = parseFloat(value) || 0;
+    let startTime = null;
+    const duration = 1500;
+    let animationFrame;
+
+    const animate = (currentTime) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 4); // easeOutQuart
+      setCount(end * easeProgress);
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        setCount(end);
+      }
+    };
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [value]);
+
+  const displayValue = format ? Math.round(count).toLocaleString() : count.toFixed(decimals);
+  return <>{prefix}{displayValue}{suffix}</>;
+};
+
 const Risks = () => {
   const [riskData, setRiskData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,8 +71,18 @@ const Risks = () => {
 
   if (loading) {
     return (
-      <div className="h-full min-h-[80vh] flex flex-col items-center justify-center p-8">
-        <Loader2 size={36} className="theme-cyan animate-spin" />
+      <div className="p-8 flex flex-col gap-6 w-full animate-in fade-in duration-500">
+        <div className="flex justify-between items-end gap-4 mb-2">
+           <div className="space-y-3 w-1/3"><div className="h-8 w-3/4 bg-gray-500/10 rounded-lg animate-pulse"></div><div className="h-4 w-1/2 bg-gray-500/10 rounded-lg animate-pulse"></div></div>
+           <div className="h-10 w-32 bg-gray-500/10 rounded-xl animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+           {[...Array(3)].map((_, i) => <div key={i} className="h-28 bg-gray-500/10 rounded-2xl animate-pulse border border-gray-500/5"></div>)}
+        </div>
+        <div className="flex flex-col gap-6">
+           <div className="h-[380px] bg-gray-500/10 rounded-2xl animate-pulse border border-gray-500/5"></div>
+           <div className="h-96 bg-gray-500/10 rounded-2xl animate-pulse border border-gray-500/5"></div>
+        </div>
       </div>
     );
   }
@@ -101,7 +140,7 @@ const Risks = () => {
   };
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 flex flex-col gap-6 w-full animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-3xl font-light theme-text tracking-tight">Risk Assessment</h1>
@@ -121,14 +160,14 @@ const Risks = () => {
             <div className="absolute inset-0 rounded-full animate-ping bg-rose-500/20"></div>
             <Flame size={32} className="text-rose-500 relative z-10" />
           </div>
-          <div className="flex-1">
-            <p className="text-rose-400 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
+          <div className="flex-1 text-center md:text-left">
+            <p className="text-rose-400 text-xs font-bold uppercase tracking-widest mb-1 flex justify-center md:justify-start items-center gap-2">
               Most Critical Inventory Alert
             </p>
             <h3 className="text-2xl font-bold text-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)] mb-2 group-hover:text-rose-400 transition-all duration-300">
               Part No: {mostCritical["Part No"]}
             </h3>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap justify-center md:justify-start items-center gap-3">
               <span className="text-sm theme-text">{mostCritical.Recommendation}</span>
               {mostCritical.Reasons?.map((r, i) => (
                 <span key={i} className="text-[10px] px-2 py-0.5 rounded border border-rose-500/30 bg-rose-500/10 text-rose-300 font-semibold tracking-wider">
@@ -139,7 +178,9 @@ const Risks = () => {
           </div>
           <div className="text-center shrink-0">
             <p className="text-xs theme-muted uppercase tracking-wider mb-1">Risk Score</p>
-            <p className="text-3xl font-light text-rose-400">{mostCritical.RiskScore}</p>
+            <p className="text-3xl font-light text-rose-400">
+              <AnimatedCounter value={mostCritical.RiskScore} decimals={2} />
+            </p>
           </div>
         </div>
       )}
@@ -157,7 +198,9 @@ const Risks = () => {
           </div>
           <div>
             <p className="theme-muted text-xs uppercase tracking-wider font-semibold mb-1">High Risk Parts</p>
-            <h3 className="text-3xl font-light theme-text tracking-tight">{highRisk.length}</h3>
+            <h3 className="text-3xl font-light theme-text tracking-tight">
+              <AnimatedCounter value={highRisk.length} format={true} />
+            </h3>
           </div>
         </div>
         
@@ -172,7 +215,9 @@ const Risks = () => {
           </div>
           <div>
             <p className="theme-muted text-xs uppercase tracking-wider font-semibold mb-1">Medium Risk Parts</p>
-            <h3 className="text-3xl font-light theme-text tracking-tight">{medRisk.length}</h3>
+            <h3 className="text-3xl font-light theme-text tracking-tight">
+              <AnimatedCounter value={medRisk.length} format={true} />
+            </h3>
           </div>
         </div>
 
@@ -187,7 +232,9 @@ const Risks = () => {
           </div>
           <div>
             <p className="theme-muted text-xs uppercase tracking-wider font-semibold mb-1">Low Risk Parts</p>
-            <h3 className="text-3xl font-light theme-text tracking-tight">{lowRisk.length}</h3>
+            <h3 className="text-3xl font-light theme-text tracking-tight">
+              <AnimatedCounter value={lowRisk.length} format={true} />
+            </h3>
           </div>
         </div>
       </div>
@@ -267,7 +314,9 @@ const Risks = () => {
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }}></div>
                 <div className="flex flex-col text-left">
                   <span className="text-[10px] theme-muted uppercase tracking-wider font-semibold">{d.name} Risk</span>
-                  <span className="text-sm theme-text font-bold">{d.value.toLocaleString()}</span>
+                  <span className="text-sm theme-text font-bold">
+                    <AnimatedCounter value={d.value} format={true} />
+                  </span>
                 </div>
               </div>
             ))}
@@ -346,7 +395,8 @@ const Risks = () => {
                   <tr 
                     key={idx} 
                     onClick={() => handleRowClick(row)}
-                    className="border-b theme-border last:border-0 hover:bg-cyan-500/5 hover:shadow-[inset_0_0_20px_rgba(34,211,238,0.05)] transition-all duration-300 cursor-pointer group"
+                    className="border-b theme-border last:border-0 hover:bg-cyan-500/5 hover:shadow-[inset_0_0_20px_rgba(34,211,238,0.05)] transition-all duration-500 cursor-pointer group animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
+                    style={{ animationDelay: `${idx * 30}ms`, animationDuration: '500ms' }}
                   >
                     <td className="px-6 py-4 font-medium theme-text group-hover:text-cyan-400 group-hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)] transition-all duration-300">{row["Part No"]}</td>
                     <td className="px-6 py-4">
@@ -413,12 +463,12 @@ const Risks = () => {
 
       {/* Sku Details Modal Panel */}
       {selectedSku && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-500">
-          <div className="theme-bg-card border theme-border rounded-2xl w-full max-w-4xl shadow-[0_0_50px_rgba(0,0,0,0.4)] flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-500 ease-out" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-500">
+          <div className="theme-app border theme-border rounded-2xl w-full max-w-4xl shadow-[0_0_50px_rgba(0,0,0,0.4)] flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-[0.98] slide-in-from-bottom-6 duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" onClick={e => e.stopPropagation()}>
              {/* Modal Header */}
-             <div className="flex justify-between items-center p-6 border-b theme-border">
+             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 border-b theme-border gap-4">
                <div>
-                 <div className="flex items-center gap-3">
+                 <div className="flex flex-wrap items-center gap-3">
                    <h2 className="text-2xl font-light theme-text tracking-tight">{selectedSku["Part No"]}</h2>
                    <span className={`text-[10px] px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider border ${
                      selectedSku.Risk === 'HIGH' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :

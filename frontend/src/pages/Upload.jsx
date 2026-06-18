@@ -119,7 +119,9 @@ export default function Upload() {
   };
 
 
-  return (<div className="max-w-6xl mx-auto mt-10">
+  return (
+    <div className="p-8 flex flex-col w-full animate-in fade-in duration-500">
+      <div className="max-w-6xl mx-auto w-full mt-2">
 
     <div className="mb-8 text-center">
       <h1 className="text-3xl font-light theme-text tracking-tight mb-2">
@@ -137,7 +139,7 @@ export default function Upload() {
       <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
 
       <div
-        className="relative theme-bg-card backdrop-blur-xl border-2 border-dashed theme-border hover:theme-cyan-border rounded-3xl p-16 flex flex-col items-center justify-center text-center transition-all duration-300"
+        className="relative theme-bg-card backdrop-blur-xl border-2 border-dashed theme-border hover:theme-cyan-border rounded-3xl p-8 md:p-16 flex flex-col items-center justify-center text-center transition-all duration-300"
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
@@ -277,6 +279,7 @@ export default function Upload() {
         )}
 
       </div>
+    </div>
     </div>
 
     <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">

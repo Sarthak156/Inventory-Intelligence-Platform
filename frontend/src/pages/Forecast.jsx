@@ -9,7 +9,10 @@ import {
   Package,
   Search as SearchIcon,
   ChevronDown,
-  AlertCircle
+  AlertCircle,
+  AlertTriangle,
+  Info,
+  Zap
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -32,18 +35,49 @@ const formatCompact = (num) => {
   return rounded.toLocaleString();
 };
 
+const AnimatedCounter = ({ value, prefix = "", suffix = "", decimals = 0, format = false }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const end = parseFloat(value) || 0;
+    let startTime = null;
+    const duration = 1500;
+    let animationFrame;
+
+    const animate = (currentTime) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 4); // easeOutQuart
+      setCount(end * easeProgress);
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        setCount(end);
+      }
+    };
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [value]);
+
+  const displayValue = format ? Math.round(count).toLocaleString() : count.toFixed(decimals);
+  return <>{prefix}{displayValue}{suffix}</>;
+};
+
 const KPICard = ({ title, value, subtitle, icon: Icon, isGood, badgeColor }) => {
   let colorClass = isGood ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20';
-  if (badgeColor === 'amber') colorClass = 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-  if (badgeColor === 'rose') colorClass = 'bg-rose-500/10 text-rose-500 border-rose-500/20';
-  if (badgeColor === 'emerald') colorClass = 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-  if (badgeColor === 'gray') colorClass = 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+  let hoverClass = 'hover:border-cyan-500/60 hover:shadow-[0_0_25px_rgba(34,211,238,0.15)]';
+  
+  if (badgeColor === 'amber') { colorClass = 'bg-amber-500/10 text-amber-500 border-amber-500/20'; hoverClass = 'hover:border-amber-500/60 hover:shadow-[0_0_25px_rgba(245,158,11,0.15)]'; }
+  if (badgeColor === 'rose') { colorClass = 'bg-rose-500/10 text-rose-500 border-rose-500/20'; hoverClass = 'hover:border-rose-500/60 hover:shadow-[0_0_25px_rgba(244,63,94,0.15)]'; }
+  if (badgeColor === 'emerald') { colorClass = 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'; hoverClass = 'hover:border-emerald-500/60 hover:shadow-[0_0_25px_rgba(16,185,129,0.15)]'; }
+  if (badgeColor === 'gray') { colorClass = 'bg-gray-500/10 text-gray-400 border-gray-500/20'; hoverClass = 'hover:border-gray-500/60 hover:shadow-[0_0_25px_rgba(107,114,128,0.15)]'; }
 
   return (
-    <div className="theme-bg-card border theme-border rounded-2xl p-5 backdrop-blur-md hover:theme-cyan-border hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] transition-all duration-300 group">
+    <div className={`theme-bg-card border theme-border rounded-2xl p-5 backdrop-blur-md ${hoverClass} hover:-translate-y-1 transition-all duration-500 group cursor-default`}>
       <div className="flex justify-between items-start mb-4">
-        <div className="w-10 h-10 rounded-lg theme-bg-icon flex items-center justify-center border theme-border group-hover:theme-cyan-border transition-colors">
-          <Icon size={18} className="theme-muted group-hover:text-cyan-500" />
+        <div className="w-10 h-10 rounded-lg theme-bg-icon flex items-center justify-center border theme-border group-hover:bg-white/5 transition-colors">
+          <Icon size={18} className="theme-muted group-hover:text-cyan-400 transition-colors" />
         </div>
         {subtitle && (
           <span className={`text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wider border ${colorClass}`}>
@@ -182,6 +216,7 @@ const Forecast = () => {
   const [skuState, setSkuState] = useState("GLOBAL");
   const [confidence, setConfidence] = useState("HIGH");
   const [sparsity, setSparsity] = useState(0);
+  const [confidenceScore, setConfidenceScore] = useState(0);
 
   const [parts, setParts] = useState([]);
   const [selectedPart, setSelectedPart] = useState("ALL_PARTS");
@@ -196,44 +231,61 @@ const Forecast = () => {
     setSkuState(dataObj.sku_state || "GLOBAL");
     setConfidence(dataObj.confidence || "HIGH");
     setSparsity(dataObj.sparsity || 0);
+    setConfidenceScore(dataObj.confidence_score || (dataObj.confidence === 'HIGH' ? 95 : dataObj.confidence === 'MEDIUM' ? 65 : dataObj.confidence === 'LOW' ? 35 : 0));
     setFullData(demandData);
     if (demandData.length > 0) {
       const historicalData = demandData.filter(d => !d.Is_Future);
       const futureData = demandData.filter(d => d.Is_Future);
       
-      let historicalKpis = { totalDemand: 0, highestMonth: "-", readiness: "0%" };
+      let historicalKpis = { totalDemand: 0, highestMonth: "-", readiness: "0%", last3M: 0 };
       if (historicalData.length > 0) {
         const total = historicalData.reduce((sum, item) => sum + (item.Demand || 0), 0);
         const highest = historicalData.reduce((max, item) => (item.Demand || 0) > (max.Demand || 0) ? item : max, historicalData[0]);
+        const last3M = historicalData.slice(-3).reduce((sum, item) => sum + (item.Demand || 0), 0);
         historicalKpis = {
           totalDemand: total,
           highestMonth: highest.Month,
           readiness: historicalData.length >= 12 ? "98%" : Math.min(100, Math.max(10, historicalData.length * 8)) + "%",
+          last3M
         };
       }
 
       const sumForecast = (months) => futureData.slice(0, months).reduce((sum, item) => sum + (item.Forecast || 0), 0);
 
+      const f1M = sumForecast(1);
+      const f3M = sumForecast(3);
+      const f6M = sumForecast(6);
+      const f12M = sumForecast(12);
+
+      let projTrend3M = 0;
+      if (historicalKpis.last3M > 0) {
+        projTrend3M = ((f3M - historicalKpis.last3M) / historicalKpis.last3M) * 100;
+      }
+
       setKpis({
         ...historicalKpis,
-        forecast1M: sumForecast(1),
-        forecast3M: sumForecast(3),
-        forecast6M: sumForecast(6),
-        forecast12M: sumForecast(12),
+        forecast1M: f1M,
+        forecast3M: f3M,
+        forecast6M: f6M,
+        forecast12M: f12M,
+        projTrend3M: projTrend3M,
       });
     } else {
       setKpis({
         totalDemand: 0, highestMonth: "-", readiness: "0%",
-        forecast1M: 0, forecast3M: 0, forecast6M: 0, forecast12M: 0
+        forecast1M: 0, forecast3M: 0, forecast6M: 0, forecast12M: 0, projTrend3M: 0
       });
     }
   };
+
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     const fetchInitialAndDemand = async () => {
       setIsFetchingPart(true);
       try {
-        if (parts.length === 0) {
+        if (isInitialMount.current) {
+          isInitialMount.current = false;
           const [demandRes, partsRes] = await Promise.all([
             API.get("/monthly-demand"),
             API.get("/parts")
@@ -268,6 +320,76 @@ const Forecast = () => {
     return [...historical, ...future.slice(0, months)];
   }, [fullData, selectedHorizon]);
 
+  const generateInsights = useMemo(() => {
+    if (!fullData || fullData.length === 0) return [];
+    const insights = [];
+    
+    // Model Selection / Fallback Strategy
+    if (forecastSource.includes('FALLBACK')) {
+      insights.push({
+        title: 'Fallback Strategy Active',
+        text: `Insufficient historical density to generate a robust part-level forecast. Falling back to ${forecastSource === 'HALB_FALLBACK' ? 'category-level (HALB)' : 'global'} baseline trends to estimate future demand.`,
+        type: 'warning'
+      });
+    } else if (forecastSource === 'PART_LEVEL') {
+      insights.push({
+        title: 'High-Fidelity Model Selected',
+        text: 'Sufficient data density detected. Granular SKU-level statistical forecasting models have been applied.',
+        type: 'success'
+      });
+    } else if (forecastSource === 'NO_FORECAST') {
+      insights.push({
+        title: 'No Forecast Generated',
+        text: 'This part lacks the necessary historical consumption to produce a mathematical forecast.',
+        type: 'alert'
+      });
+    } else if (forecastSource === 'GLOBAL_AGGREGATED') {
+      insights.push({
+        title: 'Global Aggregation Active',
+        text: 'Viewing the macro-level demand forecast across all inventory parts combined.',
+        type: 'info'
+      });
+    }
+    
+    // Trend Summary
+    if (kpis.projTrend3M > 15) {
+      insights.push({
+        title: 'Significant Demand Surge Expected',
+        text: `The AI model projects a ${kpis.projTrend3M.toFixed(1)}% increase in demand over the next 3 months compared to recent history. Recommend reviewing safety stock immediately.`,
+        type: 'warning'
+      });
+    } else if (kpis.projTrend3M < -15) {
+      insights.push({
+        title: 'Demand Contraction Predicted',
+        text: `Forecast indicates a ${Math.abs(kpis.projTrend3M).toFixed(1)}% drop in upcoming 3-month demand. Avoid over-ordering to prevent capital tie-up.`,
+        type: 'info'
+      });
+    } else if (skuState === 'ACTIVE' || skuState === 'GLOBAL') {
+      insights.push({
+        title: 'Stable Demand Trajectory',
+        text: 'Upcoming consumption is expected to remain relatively flat and consistent with historical baselines.',
+        type: 'success'
+      });
+    }
+
+    // SKU State Info
+    if (skuState === 'SPARSE') {
+      insights.push({
+        title: 'Intermittent Demand Profile',
+        text: 'This item exhibits highly irregular consumption. The forecast incorporates stochastic spike smoothing to account for sudden future orders.',
+        type: 'info'
+      });
+    } else if (skuState === 'DORMANT') {
+      insights.push({
+        title: 'Dormant Inventory Flag',
+        text: 'Item has been mostly inactive. Consider performing a lifecycle review or obsolescence check.',
+        type: 'alert'
+      });
+    }
+
+    return insights;
+  }, [fullData, forecastSource, kpis.projTrend3M, skuState]);
+
   const sourceMap = {
     'PART_LEVEL': { label: 'SKU Direct', color: 'emerald', isGood: true },
     'HALB_FALLBACK': { label: 'HALB Fallback', color: 'amber', isGood: false },
@@ -280,8 +402,16 @@ const Forecast = () => {
 
   if (loading) {
     return (
-      <div className="h-full min-h-[80vh] flex flex-col items-center justify-center p-8">
-        <Loader2 size={36} className="theme-cyan animate-spin" />
+      <div className="p-8 flex flex-col gap-6 w-full animate-in fade-in duration-500">
+        <div className="flex justify-between items-start gap-4 mb-2">
+           <div className="space-y-3 w-1/3"><div className="h-8 w-3/4 bg-gray-500/10 rounded-lg animate-pulse"></div><div className="h-4 w-1/2 bg-gray-500/10 rounded-lg animate-pulse"></div></div>
+           <div className="h-10 w-72 bg-gray-500/10 rounded-xl animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+           {[...Array(8)].map((_, i) => <div key={i} className="h-28 bg-gray-500/10 rounded-2xl animate-pulse border border-gray-500/5"></div>)}
+        </div>
+        <div className="h-[400px] bg-gray-500/10 rounded-2xl animate-pulse border border-gray-500/5"></div>
+        <div className="h-64 bg-gray-500/10 rounded-2xl animate-pulse border border-gray-500/5"></div>
       </div>
     );
   }
@@ -310,7 +440,7 @@ const Forecast = () => {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 flex flex-col gap-6 w-full animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
         <div>
           <h1 className="text-3xl font-light theme-text tracking-tight">Demand Forecast Analytics</h1>
@@ -326,14 +456,14 @@ const Forecast = () => {
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KPICard title="Total Aggregated Demand" value={formatCompact(kpis.totalDemand)} icon={BarChart2} subtitle="Historical" isGood={false} />
-        <KPICard title="Highest Demand Month" value={kpis.highestMonth} icon={TrendingUp} subtitle="Peak" isGood={false} />
-        <KPICard title="Active Inventory Parts" value={activePartsCount.toLocaleString()} icon={Activity} />
-        <KPICard title="Forecast Model" value={sourceInfo.label} icon={CheckCircle2} subtitle={`${((1 - sparsity) * 100).toFixed(0)}% Density`} badgeColor={sourceInfo.color} isGood={sourceInfo.isGood} />
-        <KPICard title="1M Projected Demand" value={formatCompact(kpis.forecast1M)} icon={LineChartIcon} subtitle="Forecast" isGood={false} />
-        <KPICard title="3M Projected Demand" value={formatCompact(kpis.forecast3M)} icon={LineChartIcon} subtitle="Forecast" isGood={false} />
-        <KPICard title="6M Projected Demand" value={formatCompact(kpis.forecast6M)} icon={LineChartIcon} subtitle="Forecast" isGood={false} />
-        <KPICard title="12M Projected Demand" value={formatCompact(kpis.forecast12M)} icon={LineChartIcon} subtitle="Forecast" isGood={false} />
+        <KPICard title="Total Aggregated Demand" value={formatCompact(kpis.totalDemand)} icon={BarChart2} subtitle="Historical" badgeColor="gray" isGood={false} />
+        <KPICard title="Forecast Confidence" value={`${confidenceScore}%`} icon={CheckCircle2} subtitle={sourceInfo.label} badgeColor={sourceInfo.color} isGood={sourceInfo.isGood} />
+        <KPICard title="Active Inventory Parts" value={<AnimatedCounter value={activePartsCount} format={true} />} icon={Activity} subtitle={`${((1 - sparsity) * 100).toFixed(0)}% Density`} badgeColor="cyan" />
+        <KPICard title="3M Demand Trend" value={kpis.projTrend3M > 0 ? `+${kpis.projTrend3M.toFixed(1)}%` : `${(kpis.projTrend3M || 0).toFixed(1)}%`} icon={TrendingUp} subtitle="vs Last 3M" badgeColor={kpis.projTrend3M >= 0 ? 'emerald' : 'amber'} isGood={kpis.projTrend3M >= 0} />
+        <KPICard title="1M Projected Demand" value={formatCompact(kpis.forecast1M)} icon={LineChartIcon} subtitle="Short-Term" badgeColor="gray" isGood={false} />
+        <KPICard title="3M Projected Demand" value={formatCompact(kpis.forecast3M)} icon={LineChartIcon} subtitle="Mid-Term" badgeColor="gray" isGood={false} />
+        <KPICard title="6M Projected Demand" value={formatCompact(kpis.forecast6M)} icon={LineChartIcon} subtitle="Long-Term" badgeColor="gray" isGood={false} />
+        <KPICard title="12M Projected Demand" value={formatCompact(kpis.forecast12M)} icon={LineChartIcon} subtitle="Strategic" badgeColor="gray" isGood={false} />
       </div>
 
       {/* FORECAST CHART */}
@@ -345,7 +475,7 @@ const Forecast = () => {
               {isFetchingPart && !loading && <Loader2 size={16} className="animate-spin text-cyan-500" />}
             </h2>
             {!isFetchingPart && skuState && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className={`text-[10px] px-2.5 py-1 rounded-lg border font-semibold uppercase tracking-wider ${
                   skuState === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
                   skuState === 'SPARSE' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
@@ -367,7 +497,7 @@ const Forecast = () => {
               </div>
             )}
           </div>
-          <div className="flex items-center gap-1 theme-bg-card-soft p-1 rounded-xl border theme-border">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-1 theme-bg-card-soft p-1 rounded-xl border theme-border w-full md:w-auto">
             {horizons.map(h => (
               <button 
                 key={h}
@@ -441,10 +571,52 @@ const Forecast = () => {
 
       {/* AI INSIGHTS */}
       <div className="theme-bg-card border theme-border rounded-2xl p-6 backdrop-blur-md">
-        <h2 className="text-xl theme-text mb-6">
-          AI Insights
-        </h2>
-        <p className="theme-muted text-sm">Actionable intelligence will appear here.</p>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+            <Zap size={20} className="text-cyan-400" />
+          </div>
+          <div>
+            <h2 className="text-xl theme-text">AI-Generated Insights</h2>
+            <p className="theme-muted text-sm mt-0.5">Automated telemetry analysis and recommendations.</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {generateInsights.map((insight, idx) => {
+            const isWarning = insight.type === 'warning';
+            const isAlert = insight.type === 'alert';
+            const isSuccess = insight.type === 'success';
+            const isInfo = insight.type === 'info';
+            
+            return (
+              <div key={idx} className={`p-5 rounded-xl border flex flex-col gap-2 ${
+                isWarning ? 'bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40' : 
+                isAlert ? 'bg-rose-500/5 border-rose-500/20 hover:border-rose-500/40' :
+                isSuccess ? 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40' :
+                'bg-cyan-500/5 border-cyan-500/20 hover:border-cyan-500/40'
+              } transition-colors duration-300`}>
+                <div className="flex items-center gap-2 mb-1">
+                  {isWarning && <AlertTriangle size={16} className="text-amber-500" />}
+                  {isAlert && <AlertCircle size={16} className="text-rose-500" />}
+                  {isSuccess && <CheckCircle2 size={16} className="text-emerald-500" />}
+                  {isInfo && <Info size={16} className="text-cyan-500" />}
+                  <h3 className={`text-sm font-semibold tracking-wide uppercase ${
+                    isWarning ? 'text-amber-500' : 
+                    isAlert ? 'text-rose-500' :
+                    isSuccess ? 'text-emerald-500' :
+                    'text-cyan-500'
+                  }`}>
+                    {insight.title}
+                  </h3>
+                </div>
+                <p className="text-sm theme-text leading-relaxed opacity-90">{insight.text}</p>
+              </div>
+            );
+          })}
+          {generateInsights.length === 0 && (
+             <p className="theme-muted text-sm italic py-4">No significant insights detected for this horizon.</p>
+          )}
+        </div>
       </div>
     </div>
   );

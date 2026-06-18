@@ -50,6 +50,36 @@ def calculate_inventory_risk(df: pd.DataFrame):
         if forecast_growth > 1.5:
             reasons.append("FORECAST SURGE")
 
+        # State logic
+        if sparsity > 0.8 or (total_months > 0 and (total_months - zero_months) <= 2):
+            state = "Dormant"
+            confidence = "LOW"
+            forecast_status = "LOW_CONFIDENCE"
+        elif sparsity > 0.5:
+            state = "Sparse"
+            confidence = "MEDIUM"
+            forecast_status = "HALB_FALLBACK"
+        elif forecast_growth > 1.5:
+            state = "Surging"
+            confidence = "MEDIUM"
+            forecast_status = "PART_LEVEL"
+        elif volatility > 1.0:
+            state = "Volatile"
+            confidence = "MEDIUM"
+            forecast_status = "PART_LEVEL"
+        else:
+            state = "Stable"
+            confidence = "HIGH"
+            forecast_status = "PART_LEVEL"
+            
+        # Demand Trend
+        if forecast_growth > 1.1:
+            demand_trend = "UP"
+        elif forecast_growth < 0.9:
+            demand_trend = "DOWN"
+        else:
+            demand_trend = "STABLE"
+
         # Classification and Recommendation
         if risk_score >= 0.7:
             risk, recommendation = "HIGH", "Increase Safety Stock"
@@ -66,7 +96,11 @@ def calculate_inventory_risk(df: pd.DataFrame):
             "ForecastGrowth": round(forecast_growth, 2),
             "RiskScore": round(risk_score, 2),
             "Recommendation": recommendation,
-            "Reasons": reasons
+            "Reasons": reasons,
+            "State": state,
+            "DemandTrend": demand_trend,
+            "Confidence": confidence,
+            "ForecastStatus": forecast_status
         })
 
     # Sort highest risk parts to the top
