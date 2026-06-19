@@ -11,6 +11,16 @@ const MainLayout = ({ children }) => {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    const syncTheme = (event) => {
+      const nextTheme = event.detail?.theme || localStorage.getItem("theme") || "light";
+      setTheme(nextTheme);
+    };
+
+    window.addEventListener("inventory-theme-change", syncTheme);
+    return () => window.removeEventListener("inventory-theme-change", syncTheme);
+  }, []);
+
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
   };

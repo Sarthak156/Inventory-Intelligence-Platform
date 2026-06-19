@@ -8,6 +8,7 @@ import Forecast from "./pages/Forecast";
 import Inventory from "./pages/Inventory";
 import Risks from "./pages/Risks";
 import Recommendations from "./pages/Recommendations";
+import Settings from "./pages/Settings";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             path="/recommendations"
             element={<Recommendations />}
           />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </MainLayout>
     </BrowserRouter>
