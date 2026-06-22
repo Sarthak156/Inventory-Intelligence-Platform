@@ -4,13 +4,15 @@ import API from "../services/api";
 import useAIInsights, { AI_INSIGHT_STATES } from "../hooks/useAIInsights";
 import ExecutiveBriefing from "../components/ai/ExecutiveBriefing";
 import AIStatus from "../components/ai/AIStatus";
-import AIRecommendationCard from "../components/recommendations/AIRecommendationCard";
-import VirtualizedRecommendationList from "../components/recommendations/VirtualizedRecommendationList";
-import AIInsightDrawer from "../components/recommendations/AIInsightDrawer";
+import RecommendationTable from "../components/recommendations/RecommendationTable";
+
+import PaginationControls from "../components/recommendations/PaginationControls";
+import RecommendationModal from "../components/recommendations/RecommendationModal";
 import RecommendationFilters from "../components/recommendations/RecommendationFilters";
+
 import { buildRecommendations, RECOMMENDATION_CATEGORIES } from "../utils/recommendationEngine";
 
-const INITIAL_RENDER_COUNT = 50;
+
 
 const KpiCard = ({ label, value, icon: Icon, tone = "cyan" }) => {
   const tones = {
@@ -30,7 +32,8 @@ export default function Recommendations() {
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [selected, setSelected] = useState(null);
   const [chartTelemetry, setChartTelemetry] = useState({ partNo: null, data: [] });
-  const [visibleItems, setVisibleItems] = useState(INITIAL_RENDER_COUNT);
+  const PAGE_SIZE = 100;
+  const [page, setPage] = useState(1);
 
   const loadRecommendations = useCallback(async () => {
     setLoading(true);
@@ -38,7 +41,7 @@ export default function Recommendations() {
       const response = await API.get("/inventory-risk");
       setRiskData(response.data || []);
       setAnalysisTime(new Date());
-      setVisibleItems(INITIAL_RENDER_COUNT);
+      setPage(1);
     } catch (error) {
       console.error("Recommendation telemetry unavailable:", error);
       setRiskData([]);
@@ -46,6 +49,7 @@ export default function Recommendations() {
       setLoading(false);
     }
   }, []);
+
 
   useEffect(() => {
     let active = true;
@@ -149,34 +153,29 @@ export default function Recommendations() {
         <RecommendationFilters active={activeCategory} onChange={setActiveCategory} counts={counts} />
       </div>
       
-      {filtered.length > 200 && filtered.length > 0 ? (
-        <VirtualizedRecommendationList 
-          items={filtered} 
-          onItemClick={handleCardClick}
-        />
+      {filtered.length === 0 ? (
+        <div className="theme-bg-card border theme-border rounded-2xl p-10 text-center theme-muted text-sm">
+          No active recommendations in this category.
+        </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {filtered.slice(0, visibleItems).map(item => (
-            <AIRecommendationCard 
-              key={item.id} 
-              recommendation={item} 
-              source={briefing.source} 
-              onClick={() => handleCardClick(item)} 
-            />
-          ))}
-        </div>
+        <>
+          <RecommendationTable
+            items={filtered.slice(
+              (page - 1) * PAGE_SIZE,
+              page * PAGE_SIZE
+            )}
+            onRowClick={handleCardClick}
+          />
+          <PaginationControls
+            page={Math.min(Math.max(1, page), Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)))}
+            totalPages={Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))}
+            pageSize={PAGE_SIZE}
+            totalItems={filtered.length}
+            onPageChange={setPage}
+          />
+        </>
       )}
-      
-      {filtered.length > 0 && visibleItems < filtered.length && (
-        <div className="flex justify-center py-4">
-          <Loader2 size={20} className="theme-cyan animate-spin" />
-          <button onClick={() => setVisibleItems(prev => Math.min(prev + 50, filtered.length))} className="ml-4 text-xs theme-cyan hover:underline">
-            Load More
-          </button>
-        </div>
-      )}
-      
-      {filtered.length === 0 && <div className="theme-bg-card border theme-border rounded-2xl p-10 text-center theme-muted text-sm">No active recommendations in this category.</div>}
+
     </section>
 
     <footer className="theme-bg-card-soft border theme-border rounded-xl px-5 py-3 flex flex-wrap justify-between gap-3 text-[9px] uppercase tracking-[0.15em] font-bold theme-muted">
@@ -186,13 +185,14 @@ export default function Recommendations() {
       <span>Recommendation Engine: <b className="text-cyan-400">Synchronized</b></span>
     </footer>
 
-    <AIInsightDrawer 
-      recommendation={selected} 
-      insight={selectedInsight} 
-      loading={selectedAiLoading} 
-      chartData={chartTelemetry.data} 
-      chartLoading={chartLoading} 
-      onClose={() => setSelected(null)} 
+    <RecommendationModal
+      recommendation={selected}
+      insight={selectedInsight}
+      loading={selectedAiLoading}
+      chartData={chartTelemetry.data}
+      chartLoading={chartLoading}
+      onClose={() => setSelected(null)}
+      source={briefing?.source ?? "fallback"}
     />
   </div>;
 }
