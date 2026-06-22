@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { ShieldAlert, AlertTriangle, CheckCircle2, Loader2, X, LineChart as LineChartIcon, Activity, Flame, Search as SearchIcon, ArrowUpDown, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import API from "../services/api";
+import useAIInsights from "../hooks/useAIInsights";
+import AIInsightPanel from "../components/ai/AIInsightPanel";
 
 const AnimatedCounter = ({ value, prefix = "", suffix = "", decimals = 0, format = false }) => {
   const [count, setCount] = useState(0);
@@ -68,6 +70,17 @@ const Risks = () => {
     });
     return Array.from(tags).sort();
   }, [riskData]);
+
+  const riskMetrics = useMemo(() => ({
+    scope: "risk surveillance",
+    totalSkus: riskData.length,
+    highRiskCount: riskData.filter(d => d.Risk === "HIGH").length,
+    volatileCount: riskData.filter(d => d.Volatility > 1).length,
+    sparseCount: riskData.filter(d => d.State === "Sparse" || d.State === "Dormant").length,
+    demandGrowthPercent: riskData.length ? (riskData.reduce((sum, d) => sum + d.ForecastGrowth, 0) / riskData.length - 1) * 100 : 0,
+  }), [riskData]);
+  const { insight: riskInsight, loading: riskAiLoading } = useAIInsights(riskMetrics, riskData.length > 0);
+  const { insight: skuInsight, loading: skuAiLoading } = useAIInsights(selectedSku || {}, Boolean(selectedSku));
 
   if (loading) {
     return (
@@ -152,6 +165,8 @@ const Risks = () => {
           </button>
         )}
       </div>
+
+      <AIInsightPanel insight={riskInsight} loading={riskAiLoading} title="Risk Intelligence Analysis" />
 
       {/* Most Critical Alert */}
       {mostCritical && (
@@ -527,7 +542,9 @@ const Risks = () => {
                  </div>
                )}
       
-               {/* Chart Area */}
+              <AIInsightPanel insight={skuInsight} loading={skuAiLoading} />
+
+              {/* Chart Area */}
                <div>
                  <p className="text-xs theme-muted uppercase tracking-wider mb-3 flex items-center gap-2">
                    <LineChartIcon size={14} className="theme-cyan" />

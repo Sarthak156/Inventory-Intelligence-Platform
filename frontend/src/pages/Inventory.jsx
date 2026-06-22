@@ -3,6 +3,9 @@ import { BoxSelect, Database, Loader2, Search as SearchIcon, ChevronLeft, Chevro
 import { Link } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import API from "../services/api";
+import useAIInsights from "../hooks/useAIInsights";
+import AIInsightPanel from "../components/ai/AIInsightPanel";
+import ExecutiveBriefing from "../components/ai/ExecutiveBriefing";
 
 const AnimatedCounter = ({ value, prefix = "", suffix = "", decimals = 0, format = false }) => {
   const [count, setCount] = useState(0);
@@ -85,10 +88,9 @@ const Inventory = () => {
   const activeSkus = inventoryData.filter(d => d.State !== "Dormant").length;
   const criticalAlerts = inventoryData.filter(d => d.Risk === "HIGH").length;
   const sparseCount = inventoryData.filter(d => d.State === "Sparse").length;
-  const sparsePercent = inventoryData.length ? Math.round((sparseCount / inventoryData.length) * 100) : 0;
   const volatileCount = inventoryData.filter(d => d.Volatility > 1).length;
 
-  const { demandAcceleration, optimizationReadiness, fallbackCoverage } = useMemo(() => {
+  const { demandAcceleration, optimizationReadiness } = useMemo(() => {
     if (!inventoryData || inventoryData.length === 0) {
         return { demandAcceleration: 0, optimizationReadiness: 0, fallbackCoverage: 0 };
     }
@@ -113,6 +115,14 @@ const Inventory = () => {
         fallbackCoverage
     };
   }, [inventoryData]);
+
+  const inventoryMetrics = useMemo(() => ({
+    scope: "inventory command center", totalSkus: inventoryData.length,
+    highRiskCount: criticalAlerts, volatileCount, sparseCount,
+    demandGrowthPercent: demandAcceleration, optimizationReadiness,
+  }), [inventoryData.length, criticalAlerts, volatileCount, sparseCount, demandAcceleration, optimizationReadiness]);
+  const { insight: inventoryInsight, loading: aiLoading } = useAIInsights(inventoryMetrics, inventoryData.length > 0);
+  const { insight: skuInsight, loading: skuAiLoading } = useAIInsights(selectedSku || {}, Boolean(selectedSku));
 
   const handleRowClick = async (sku) => {
     setSelectedSku(sku);
@@ -270,27 +280,8 @@ const Inventory = () => {
         </div>
       </div>
 
-      {/* AI Insights Panel */}
-      <div className="theme-bg-card border theme-border rounded-2xl p-6 backdrop-blur-md">
-        <div className="flex items-center gap-3 mb-4">
-          <Zap size={18} className="text-cyan-400" />
-          <h2 className="text-sm uppercase tracking-widest theme-text font-semibold">AI Operations Insights</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
-            <p className="text-xs text-amber-500 font-semibold mb-1 uppercase tracking-wide">Volatility Alert</p>
-            <p className="text-sm theme-text"><AnimatedCounter value={volatileCount} /> SKUs show increasing volatility this quarter.</p>
-          </div>
-          <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-4">
-            <p className="text-xs text-cyan-500 font-semibold mb-1 uppercase tracking-wide">Inventory Profile</p>
-            <p className="text-sm theme-text">Sparse-demand parts account for <AnimatedCounter value={sparsePercent} suffix="%" /> of monitored inventory.</p>
-          </div>
-          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
-            <p className="text-xs text-emerald-500 font-semibold mb-1 uppercase tracking-wide">System Optimization</p>
-            <p className="text-sm theme-text">Fallback strategies applied to <AnimatedCounter value={fallbackCoverage} suffix="%" /> of sparse SKUs to improve stability.</p>
-          </div>
-        </div>
-      </div>
+      <ExecutiveBriefing insight={inventoryInsight} loading={aiLoading} />
+      <AIInsightPanel insight={inventoryInsight} loading={aiLoading} />
 
       {/* Operational Workspace */}
       <div className="theme-bg-card border theme-border rounded-2xl backdrop-blur-md overflow-hidden flex flex-col">
@@ -518,6 +509,7 @@ const Inventory = () => {
               </div>
 
               {/* Recommendation Engine */}
+              <AIInsightPanel insight={skuInsight} loading={skuAiLoading} />
               <div className="theme-bg-card border theme-cyan-border shadow-[0_0_15px_rgba(34,211,238,0.1)] rounded-xl p-5">
                 <h3 className="text-sm font-semibold text-cyan-400 flex items-center gap-2 mb-2 uppercase tracking-widest">
                   <Zap size={16} className="text-cyan-400" /> AI Optimization Engine

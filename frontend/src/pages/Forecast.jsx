@@ -26,6 +26,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import API from "../services/api";
+import useAIInsights from "../hooks/useAIInsights";
+import AIInsightPanel from "../components/ai/AIInsightPanel";
 
 const formatCompact = (num) => {
   if (num === null || num === undefined) return "0";
@@ -320,6 +322,20 @@ const Forecast = () => {
     return [...historical, ...future.slice(0, months)];
   }, [fullData, selectedHorizon]);
 
+  const forecastMetrics = useMemo(() => ({
+    scope: selectedPart === "ALL_PARTS" ? "aggregate forecast" : "SKU forecast",
+    partNo: selectedPart === "ALL_PARTS" ? null : selectedPart,
+    demandState: skuState,
+    sparsity,
+    forecastGrowth: 1 + (kpis.projTrend3M || 0) / 100,
+    demandGrowthPercent: kpis.projTrend3M || 0,
+    confidence,
+    confidenceScore,
+    forecastSource,
+    totalSkus: selectedPart === "ALL_PARTS" ? activePartsCount : 0,
+  }), [selectedPart, skuState, sparsity, kpis.projTrend3M, confidence, confidenceScore, forecastSource, activePartsCount]);
+  const { insight: forecastInsight, loading: forecastAiLoading } = useAIInsights(forecastMetrics, fullData.length > 0);
+
   const generateInsights = useMemo(() => {
     if (!fullData || fullData.length === 0) return [];
     const insights = [];
@@ -466,6 +482,8 @@ const Forecast = () => {
         <KPICard title="12M Projected Demand" value={formatCompact(kpis.forecast12M)} icon={LineChartIcon} subtitle="Strategic" badgeColor="gray" isGood={false} />
       </div>
 
+      <AIInsightPanel insight={forecastInsight} loading={forecastAiLoading} title="Forecast Intelligence Analysis" />
+
       {/* FORECAST CHART */}
       <div className="theme-bg-card border theme-border rounded-2xl p-6 backdrop-blur-md">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
@@ -576,8 +594,8 @@ const Forecast = () => {
             <Zap size={20} className="text-cyan-400" />
           </div>
           <div>
-            <h2 className="text-xl theme-text">AI-Generated Insights</h2>
-            <p className="theme-muted text-sm mt-0.5">Automated telemetry analysis and recommendations.</p>
+            <h2 className="text-xl theme-text">Forecast Signals</h2>
+            <p className="theme-muted text-sm mt-0.5">Deterministic model selection and trajectory telemetry.</p>
           </div>
         </div>
         
