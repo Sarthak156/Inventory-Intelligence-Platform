@@ -5,14 +5,9 @@ import useAIInsights, { AI_INSIGHT_STATES } from "../hooks/useAIInsights";
 import ExecutiveBriefing from "../components/ai/ExecutiveBriefing";
 import AIStatus from "../components/ai/AIStatus";
 import RecommendationTable from "../components/recommendations/RecommendationTable";
-
-import PaginationControls from "../components/recommendations/PaginationControls";
 import RecommendationModal from "../components/recommendations/RecommendationModal";
-import RecommendationFilters from "../components/recommendations/RecommendationFilters";
 
-import { buildRecommendations, RECOMMENDATION_CATEGORIES } from "../utils/recommendationEngine";
-
-
+import { buildRecommendations } from "../utils/recommendationEngine";
 
 const KpiCard = ({ label, value, icon: Icon, tone = "cyan" }) => {
   const tones = {
@@ -29,11 +24,8 @@ export default function Recommendations() {
   const [riskData, setRiskData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [analysisTime, setAnalysisTime] = useState(new Date());
-  const [activeCategory, setActiveCategory] = useState("ALL");
   const [selected, setSelected] = useState(null);
   const [chartTelemetry, setChartTelemetry] = useState({ partNo: null, data: [] });
-  const PAGE_SIZE = 100;
-  const [page, setPage] = useState(1);
 
   const loadRecommendations = useCallback(async () => {
     setLoading(true);
@@ -41,7 +33,6 @@ export default function Recommendations() {
       const response = await API.get("/inventory-risk");
       setRiskData(response.data || []);
       setAnalysisTime(new Date());
-      setPage(1);
     } catch (error) {
       console.error("Recommendation telemetry unavailable:", error);
       setRiskData([]);
@@ -49,7 +40,6 @@ export default function Recommendations() {
       setLoading(false);
     }
   }, []);
-
 
   useEffect(() => {
     let active = true;
@@ -93,18 +83,6 @@ export default function Recommendations() {
   const { insight: briefing, loading: aiLoading } = useAIInsights(executiveMetrics, riskData.length > 0, AI_INSIGHT_STATES.SELECTED);
   const { insight: selectedInsight, loading: selectedAiLoading } = useAIInsights(selected?.metrics || {}, Boolean(selected), AI_INSIGHT_STATES.SELECTED);
   
-  const counts = useMemo(() => Object.fromEntries(
-    RECOMMENDATION_CATEGORIES.map(category => [
-      category, 
-      category === "ALL" ? recommendations.length : recommendations.filter(item => item.category === category).length
-    ])
-  ), [recommendations]);
-  
-  const filtered = useMemo(() => {
-    const items = activeCategory === "ALL" ? recommendations : recommendations.filter(item => item.category === activeCategory);
-    return items;
-  }, [activeCategory, recommendations]);
-
   const chartLoading = Boolean(selected && chartTelemetry.partNo !== selected.partNo);
 
   const handleCardClick = useCallback((item) => {
@@ -150,32 +128,18 @@ export default function Recommendations() {
           <h2 className="text-sm theme-text uppercase tracking-widest font-semibold">Strategic Recommendations Feed</h2>
           <p className="text-xs theme-muted mt-1">Prioritized actions derived from current operational telemetry.</p>
         </div>
-        <RecommendationFilters active={activeCategory} onChange={setActiveCategory} counts={counts} />
       </div>
       
-      {filtered.length === 0 ? (
+      {recommendations.length === 0 ? (
         <div className="theme-bg-card border theme-border rounded-2xl p-10 text-center theme-muted text-sm">
           No active recommendations in this category.
         </div>
       ) : (
-        <>
-          <RecommendationTable
-            items={filtered.slice(
-              (page - 1) * PAGE_SIZE,
-              page * PAGE_SIZE
-            )}
-            onRowClick={handleCardClick}
-          />
-          <PaginationControls
-            page={Math.min(Math.max(1, page), Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)))}
-            totalPages={Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))}
-            pageSize={PAGE_SIZE}
-            totalItems={filtered.length}
-            onPageChange={setPage}
-          />
-        </>
+        <RecommendationTable
+          items={recommendations}
+          onRowClick={handleCardClick}
+        />
       )}
-
     </section>
 
     <footer className="theme-bg-card-soft border theme-border rounded-xl px-5 py-3 flex flex-wrap justify-between gap-3 text-[9px] uppercase tracking-[0.15em] font-bold theme-muted">

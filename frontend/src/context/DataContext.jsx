@@ -1,20 +1,22 @@
-import { createContext, useState } from "react";
-
-export const DataContext = createContext();
+import { useState } from "react";
+import { DataContext } from "./ReactContexts";
 
 export const DataProvider = ({ children }) => {
-
-  const [datasetPreview, setDatasetPreview] =
-    useState(null);
+  const [datasetPreview, setDatasetPreview] = useState(null);
 
   return (
     <DataContext.Provider
       value={{
         datasetPreview,
-        setDatasetPreview
+        setDatasetPreview,
       }}
     >
       {children}
     </DataContext.Provider>
   );
 };
+
+export { DataContext };
+
+
+
