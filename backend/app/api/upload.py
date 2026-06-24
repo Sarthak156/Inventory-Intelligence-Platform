@@ -64,12 +64,12 @@ async def process_sheet(request: ProcessSheetRequest):
         if df.empty:
             return JSONResponse(
                 status_code=400,
-                content={"detail": f"The selected sheet '{request.sheet_name}' is empty."}
+                content={"detail": f"The selected sheet '{request.sheet_name}' is empty or invalid."}
             )
             
         # Clean and standardize column names (e.g., converts 'Part Number' to 'Part No')
         df.columns = [str(col).strip() for col in df.columns]
-        df.rename(columns={"Part Number": "Part No", "SKU": "Part No", "Item": "Part No", "Part_No": "Part No"}, inplace=True)
+        df.rename(columns={"Part Number": "Part No", "SKU": "Part No", "Item": "Part No", "Part_No": "Part No", "Material": "Part No"}, inplace=True)
         
         # Guard against processing invalid sheets (like Summary or Instructions tabs)
         if "Part No" not in df.columns:

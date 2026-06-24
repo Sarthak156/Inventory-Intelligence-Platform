@@ -50,7 +50,7 @@ export default function Upload() {
     try {
 
       const response = await API.post(
-        "/upload",
+        "/api/upload",
         formData
       );
 
@@ -82,7 +82,7 @@ export default function Upload() {
     setErrorMsg(null);
 
     try {
-      const response = await API.post("/process-sheet", {
+      const response = await API.post("/api/process-sheet", {
         file_id: fileId,
         sheet_name: selectedSheet,
       });

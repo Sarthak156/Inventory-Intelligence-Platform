@@ -30,7 +30,7 @@ export default function Recommendations() {
   const loadRecommendations = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await API.get("/inventory-risk");
+      const response = await API.get("/api/inventory-risk");
       setRiskData(response.data || []);
       setAnalysisTime(new Date());
     } catch (error) {
@@ -43,7 +43,7 @@ export default function Recommendations() {
 
   useEffect(() => {
     let active = true;
-    API.get("/inventory-risk")
+    API.get("/api/inventory-risk")
       .then(response => { if (active) { setRiskData(response.data || []); setAnalysisTime(new Date()); } })
       .catch(error => { console.error("Recommendation telemetry unavailable:", error); if (active) setRiskData([]); })
       .finally(() => { if (active) setLoading(false); });
@@ -53,7 +53,7 @@ export default function Recommendations() {
   useEffect(() => {
     let active = true;
     if (!selected) return () => { active = false; };
-    API.get(`/monthly-demand/${encodeURIComponent(selected.partNo)}`)
+    API.get(`/api/monthly-demand/${encodeURIComponent(selected.partNo)}`)
       .then(response => { if (active) setChartTelemetry({ partNo: selected.partNo, data: response.data?.items || [] }); })
       .catch(error => { console.info("Recommendation timeline unavailable:", error.message); if (active) setChartTelemetry({ partNo: selected.partNo, data: [] }); });
     return () => { active = false; };

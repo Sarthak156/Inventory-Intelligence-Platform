@@ -50,7 +50,7 @@ const Risks = () => {
   useEffect(() => {
     const fetchRisks = async () => {
       try {
-        const res = await API.get("/inventory-risk");
+        const res = await API.get("/api/inventory-risk");
         setRiskData(res.data || []);
       } catch (err) {
         console.error("Failed to fetch risk data:", err);
@@ -134,7 +134,7 @@ const Risks = () => {
     setSelectedSku(sku);
     setLoadingSku(true);
     try {
-      const res = await API.get(`/monthly-demand/${encodeURIComponent(sku["Part No"])}`);
+      const res = await API.get(`/api/monthly-demand/${encodeURIComponent(sku["Part No"])}`);
       setSkuDemandData(res.data);
     } catch (err) {
       console.error(err);

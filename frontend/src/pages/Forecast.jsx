@@ -289,8 +289,8 @@ const Forecast = () => {
         if (isInitialMount.current) {
           isInitialMount.current = false;
           const [demandRes, partsRes] = await Promise.all([
-            API.get("/monthly-demand"),
-            API.get("/parts")
+            API.get("/api/monthly-demand"),
+            API.get("/api/parts")
           ]);
           
           const fetchedParts = partsRes.data || [];
@@ -300,8 +300,8 @@ const Forecast = () => {
           setLoading(false);
         } else {
           const url = selectedPart === "ALL_PARTS" 
-            ? "/monthly-demand" 
-            : `/monthly-demand/${encodeURIComponent(selectedPart)}`;
+            ? "/api/monthly-demand" 
+            : `/api/monthly-demand/${encodeURIComponent(selectedPart)}`;
           const demandRes = await API.get(url);
           processDemandData(demandRes.data || {});
         }
@@ -546,7 +546,7 @@ const Forecast = () => {
           </div>
         )}
         
-        <div className="w-full" style={{ minWidth: 0, height: 400 }}>
+        <div className="w-full" style={{ height: 400, minWidth: 0 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />

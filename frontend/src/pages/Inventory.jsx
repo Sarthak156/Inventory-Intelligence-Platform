@@ -54,7 +54,7 @@ const Inventory = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await API.get("/inventory-risk");
+        const res = await API.get("/api/inventory-risk");
         setInventoryData(res.data || []);
       } catch (error) {
         console.error("Failed to fetch inventory data:", error);
@@ -128,7 +128,7 @@ const Inventory = () => {
     setSelectedSku(sku);
     setLoadingSku(true);
     try {
-      const res = await API.get(`/monthly-demand/${encodeURIComponent(sku["Part No"])}`);
+      const res = await API.get(`/api/monthly-demand/${encodeURIComponent(sku["Part No"])}`);
       setSkuDemandData(res.data);
     } catch (err) {
       console.error(err);
@@ -550,7 +550,7 @@ const Inventory = () => {
                   <LineChartIcon size={14} className="theme-cyan" />
                   Historical vs AI Forecast Timeline
                 </p>
-                <div className="theme-bg-card-soft border theme-border rounded-xl p-4 h-64">
+                <div className="theme-bg-card-soft border theme-border rounded-xl p-4 h-64" style={{ minWidth: 0 }}>
                   {loadingSku ? (
                     <div className="h-full flex items-center justify-center">
                       <Loader2 size={24} className="theme-cyan animate-spin" />
