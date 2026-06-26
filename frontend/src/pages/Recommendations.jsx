@@ -91,7 +91,7 @@ export default function Recommendations() {
 
   if (loading) return <div className="min-h-[60vh] grid place-items-center"><div className="text-center"><Loader2 size={30} className="theme-cyan animate-spin mx-auto" /><p className="theme-muted text-sm mt-3 uppercase tracking-widest">Synchronizing recommendation engine</p></div></div>;
 
-  return <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+  return <div className="p-8 flex flex-col gap-6 w-full animate-in fade-in duration-500">
     <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
       <div>
         <p className="text-[10px] theme-cyan uppercase tracking-[0.22em] font-bold mb-2">Strategic Operations System</p>
