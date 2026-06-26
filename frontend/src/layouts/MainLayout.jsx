@@ -78,7 +78,7 @@ const MainLayout = ({ children }) => {
         </header>
 
         {/* Scrollable Page Content */}
-        <div className="flex-1 overflow-y-auto p-8 relative scrollbar-hide">
+        <div className="flex-1 overflow-y-auto relative scrollbar-hide">
           {children}
         </div>
       </main>
