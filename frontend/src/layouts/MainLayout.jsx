@@ -27,14 +27,18 @@ const MainLayout = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (profileMenuRef.current && !profileMenu.current.contains(event.target)) {
+    if (!isProfileOpen) return;
+
+    function handleClickOutside(event) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
         setIsProfileOpen(false);
       }
-    };
+    }
+
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isProfileOpen]);
 
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));

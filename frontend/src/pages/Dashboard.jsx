@@ -13,11 +13,11 @@ const KPICard = ({ title, value, trend, trendContext, sparklineData, icon: Icon,
   const trendColor = trendIsPositive ? 'text-emerald-400' : 'text-rose-400';
   const TrendIcon = trendIsPositive ? ArrowUp : ArrowDown;
   const colorMap = {
-    purple: { icon: 'text-violet-400', spark: 'var(--theme-violet)' },
+    purple: { icon: 'text-violet-400', spark: '#8b5cf6' },
     red: { icon: 'text-rose-400', spark: 'var(--theme-rose)' },
     yellow: { icon: 'text-amber-400', spark: 'var(--theme-amber)' },
     green: { icon: 'text-emerald-400', spark: 'var(--theme-emerald)' },
-    blue: { icon: 'text-sky-400', spark: 'var(--theme-sky)' },
+    blue: { icon: 'text-cyan-400', spark: 'var(--theme-cyan)' },
   };
   const cardColor = colorMap[color] || colorMap.blue;
 
