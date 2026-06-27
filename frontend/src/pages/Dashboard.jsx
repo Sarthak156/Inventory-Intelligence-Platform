@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   TrendingUp, Package, AlertOctagon, ShieldCheck, AlertTriangle, Clock, Waves, Target, CheckCircle, XCircle, Info, ArrowRight, RefreshCw, Calendar, Flame, ArrowUp, ArrowDown, Bot
 } from "lucide-react";
@@ -289,16 +289,17 @@ const ForecastSummary = ({ data, confidence }) => (
   </div>
 );
 
-const MainForecastChart = ({ data }) => (
+const MainForecastChart = ({ data, selectedHorizon, setSelectedHorizon, chartData }) => (
   <div className="lg:col-span-2 theme-bg-card border theme-border rounded-2xl p-6 backdrop-blur-sm">
     <div className="flex justify-between items-center mb-6">
       <h2 className="text-sm uppercase tracking-widest theme-text font-semibold">Global Demand vs AI Forecast</h2>
-      <div className="flex items-center gap-1 theme-bg-card-soft p-1 rounded-xl border theme-border">
-        {['6M', '12M', '24M', 'All'].map(h => (
-          <button 
+      <div className="flex items-center gap-1 theme-bg-card-soft p-1 rounded-xl border theme-border w-full sm:w-auto">
+        {['1M', '3M', '6M', '12M'].map(h => (
+          <button
             key={h}
+            onClick={() => setSelectedHorizon(h)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-              h === '12M' ? 'bg-cyan-500 text-black shadow-sm' : 'text-cyan-200 hover:bg-white/10'
+              selectedHorizon === h ? 'bg-cyan-500 text-black shadow-sm' : 'text-cyan-200 hover:bg-white/10'
             }`}
           >
             {h}
@@ -308,7 +309,7 @@ const MainForecastChart = ({ data }) => (
     </div>
     <div className="w-full" style={{ height: 300, minWidth: 0 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="var(--theme-cyan)" stopOpacity={0.3}/>
@@ -394,6 +395,7 @@ export default function Dashboard() {
   const [criticalAlert, setCriticalAlert] = useState(null);
   const [aiInsights, setAiInsights] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedHorizon, setSelectedHorizon] = useState('12M');
 
   const sparkline = useMemo(() => Array.from({ length: 12 }, () => ({ value: Math.random() * 100 })), []);
   const riskTrendData = useMemo(() => Array.from({ length: 7 }, (_, i) => ({ name: `Day ${i+1}`, value: Math.floor(Math.random() * 20) + 10 })), []);
@@ -410,6 +412,24 @@ export default function Dashboard() {
     { horizon: '12M', value: '13.1M', trend: 1 },
   ]), []);
 
+  const fullDemandData = useRef([]);
+
+  const chartData = useMemo(() => {
+    if (!fullDemandData.current || fullDemandData.current.length === 0) return [];
+    const horizonMonths = parseInt(selectedHorizon);
+    const historicalData = fullDemandData.current.filter(d => !d.Is_Future);
+    const futureData = fullDemandData.current.filter(d => d.Is_Future);
+    
+    const chartPoints = [...historicalData.slice(-12), ...futureData.slice(0, horizonMonths)];
+
+    return chartPoints.map(d => ({
+      name: d.Month.substring(0, 3),
+      demand: d.Demand,
+      forecast: d.Forecast,
+      confidence: d.Forecast ? [d.Forecast * 0.8, d.Forecast * 1.2] : [null, null]
+    }));
+  }, [selectedHorizon, fullDemandData.current]);
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -420,17 +440,8 @@ export default function Dashboard() {
         ]);
 
         // Process Demand Data for Main Chart
-        const demandItems = demandRes.data.items || [];
-        const historicalDemand = demandItems.filter(d => !d.Is_Future);
-        const futureDemand = demandItems.filter(d => d.Is_Future);
-        const chartData = [...historicalDemand.slice(-6), ...futureDemand.slice(0,6)].map(d => ({ 
-          name: d.Month.substring(0, 3), 
-          demand: d.Demand, 
-          forecast: d.Forecast,
-          confidence: [d.Forecast * 0.8, d.Forecast * 1.2] // Placeholder for confidence interval
-        }));
-        setDemandData(chartData);
-
+        fullDemandData.current = demandRes.data.items || [];
+        setDemandData(fullDemandData.current); // Trigger re-render
         // Process Risk Data for KPIs, Charts, and Tables
         const riskItems = riskRes.data || [];
         const highRisk = riskItems.filter(item => item.Risk === 'HIGH');
@@ -538,7 +549,12 @@ export default function Dashboard() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <MainForecastChart data={demandData} />
+        <MainForecastChart
+          data={demandData}
+          selectedHorizon={selectedHorizon}
+          setSelectedHorizon={setSelectedHorizon}
+          chartData={chartData}
+        />
         <AIInsightEngine insights={aiInsights} />
       </div>
 
