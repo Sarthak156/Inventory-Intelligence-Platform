@@ -401,7 +401,7 @@ export default function Dashboard() {
   const riskTrendData = useMemo(() => Array.from({ length: 7 }, (_, i) => ({ name: `Day ${i+1}`, value: Math.floor(Math.random() * 20) + 10 })), []);
   const inventoryHealthData = useMemo(() => ([
     { name: 'Healthy', count: 1203, percent: 60, color: 'var(--theme-emerald)' },
-    { name: 'Monitor', count: 450, percent: 22.5, color: 'var(--theme-sky)' },
+    { name: 'Monitor', count: 450, percent: 22.5, color: 'var(--theme-cyan)' },
     { name: 'At Risk', count: 250, percent: 12.5, color: 'var(--theme-amber)' },
     { name: 'Critical', count: 97, percent: 5, color: 'var(--theme-rose)' },
   ]), []);
