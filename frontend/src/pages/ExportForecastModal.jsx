@@ -19,7 +19,7 @@ const ExportForecastModal = ({ isOpen, onClose, allParts, currentPart }) => {
 
     setIsExporting(true);
     setError(null);
-
+ 
     try {
       const payload = {
         parts: partSelectionMode === 'all' ? ['ALL_PARTS'] : (selectedParts || []),
