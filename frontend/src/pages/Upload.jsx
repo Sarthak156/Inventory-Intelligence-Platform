@@ -6,7 +6,8 @@ import {
   AlertCircle,
   Loader2,
   ChevronDown
-} from "lucide-react";
+} from "lucide-react"; 
+import { useNavigate } from "react-router-dom";
 
 import API from "../services/api";
 import { useContext } from "react";
@@ -18,6 +19,7 @@ import {
 
 
 export default function Upload() {
+  const navigate = useNavigate();
 
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -83,16 +85,25 @@ export default function Upload() {
     setProcessing(true);
     setErrorMsg(null);
 
+    console.log("Processing sheet started for file:", fileId, "sheet:", selectedSheet);
+
     try {
       const response = await API.post("/api/process-sheet", {
         file_id: fileId,
         sheet_name: selectedSheet,
       });
 
+      console.log("Sheet processing successful, response received:", response.data);
       setDatasetPreview(response.data);
+
+      // On success, navigate to the forecast page to see the new data.
+      // This is a more robust UX than staying on the upload page.
+      console.log("Navigating to /forecast to reflect updated data.");
+      navigate("/forecast");
+
     } catch (error) {
-      console.error(error);
-      setErrorMsg(error.response?.data?.detail || "An unexpected error occurred during processing.");
+      console.error("Caught error during sheet processing:", error);
+      setErrorMsg(error.response?.data?.detail || "An unexpected error occurred during sheet processing.");
     } finally {
       setProcessing(false);
     }
@@ -255,7 +266,7 @@ export default function Upload() {
             </div>
 
             <button
-              onClick={handleProcessSheet}
+              onClick={() => handleProcessSheet()}
               disabled={processing}
               className="w-full bg-cyan-500 hover:bg-cyan-400 transition-all duration-300 text-black font-semibold px-8 py-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
             >

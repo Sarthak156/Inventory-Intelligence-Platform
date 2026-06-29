@@ -27,6 +27,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import API from "../services/api";
+import { DataContext } from "../context/DataContext";
 import useAIInsights from "../hooks/useAIInsights";
 import AIInsightPanel from "/src/components/ai/AIInsightPanel";
 import ExportButton from "./ExportButton";
@@ -206,6 +207,7 @@ const PartSelector = ({ parts, selectedPart, setSelectedPart }) => {
 };
 
 const Forecast = () => {
+  const { datasetPreview } = useContext(DataContext);
   const [fullData, setFullData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState({ 
@@ -288,6 +290,7 @@ const Forecast = () => {
 
   useEffect(() => {
     const fetchInitialAndDemand = async () => {
+      console.log("Forecast.jsx: Fetching data. Triggered by change in selectedPart or datasetPreview.");
       setIsFetchingPart(true);
       try {
         if (isInitialMount.current) {
@@ -316,7 +319,7 @@ const Forecast = () => {
       }
     };
     fetchInitialAndDemand();
-  }, [selectedPart]);
+  }, [selectedPart, datasetPreview]);
 
   const chartData = useMemo(() => {
     if (!fullData || fullData.length === 0) return [];
