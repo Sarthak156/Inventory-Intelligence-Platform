@@ -17,7 +17,7 @@ const MultiSelectPartsDropdown = ({ allParts, selectedParts, setSelectedParts })
   }, []);
 
   const availableParts = useMemo(() => {
-    const selectedSet = new Set(selectedParts);
+    const selectedSet = new Set(Array.isArray(selectedParts) ? selectedParts : []);
     return allParts.filter(part => 
       !selectedSet.has(part) &&
       part.toLowerCase().includes(searchTerm.toLowerCase())
@@ -25,7 +25,7 @@ const MultiSelectPartsDropdown = ({ allParts, selectedParts, setSelectedParts })
   }, [allParts, selectedParts, searchTerm]);
 
   const togglePart = (part) => {
-    setSelectedParts(prev => 
+    setSelectedParts(prev =>
       prev.includes(part) ? prev.filter(p => p !== part) : [...prev, part]
     );
   };
@@ -35,7 +35,7 @@ const MultiSelectPartsDropdown = ({ allParts, selectedParts, setSelectedParts })
   };
 
   const clearAll = () => {
-    setSelectedParts([]);
+    setSelectedParts([]); // Ensure this always sets to an empty array
   };
 
   return (
@@ -45,8 +45,8 @@ const MultiSelectPartsDropdown = ({ allParts, selectedParts, setSelectedParts })
         onClick={() => setIsOpen(true)}
       >
         <Package size={16} className="theme-cyan flex-shrink-0" />
-        {selectedParts.length === 0 && <span className="theme-muted">Select parts...</span>}
-        {selectedParts.map(part => (
+        {(!selectedParts || selectedParts.length === 0) && <span className="theme-muted">Select parts...</span>}
+        {Array.isArray(selectedParts) && selectedParts.map(part => (
           <span key={part} className="flex items-center gap-1.5 bg-cyan-500/10 text-cyan-300 text-xs font-medium px-2 py-1 rounded">
             {part}
             <button onClick={(e) => { e.stopPropagation(); togglePart(part); }} className="hover:text-white">

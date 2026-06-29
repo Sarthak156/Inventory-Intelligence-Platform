@@ -12,7 +12,7 @@ const ExportForecastModal = ({ isOpen, onClose, allParts, currentPart }) => {
   const [error, setError] = useState(null);
 
   const handleExport = async () => {
-    if (partSelectionMode === 'specific' && selectedParts.length === 0) {
+    if (partSelectionMode === 'specific' && (!selectedParts || selectedParts.length === 0)) {
       setError('Please select at least one part for a specific export.');
       return;
     }
@@ -22,7 +22,7 @@ const ExportForecastModal = ({ isOpen, onClose, allParts, currentPart }) => {
 
     try {
       const payload = {
-        parts: partSelectionMode === 'all' ? ['ALL_PARTS'] : selectedParts,
+        parts: partSelectionMode === 'all' ? ['ALL_PARTS'] : (selectedParts || []),
         horizon: horizon,
         format: format,
       };
@@ -126,7 +126,7 @@ const ExportForecastModal = ({ isOpen, onClose, allParts, currentPart }) => {
         <div className="p-6 border-t theme-border theme-bg-card-soft flex justify-end">
           <button
             onClick={handleExport}
-            disabled={isExporting || (partSelectionMode === 'specific' && selectedParts.length === 0)}
+            disabled={isExporting || (partSelectionMode === 'specific' && (!selectedParts || selectedParts.length === 0))}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 theme-button-cyan py-2.5 px-8 rounded-xl transition-all text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isExporting ? (
