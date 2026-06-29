@@ -37,42 +37,44 @@ export default function Upload() {
   const [processing, setProcessing] = useState(false);
 
   const handleUpload = async () => {
-
-
     if (!file) return;
 
+    console.log("Upload started...");
     setLoading(true);
     setErrorMsg(null);
 
     const formData = new FormData();
     formData.append("file", file);
+    console.log("Selected file:", file.name, file.size, "bytes");
 
     try {
-
+      console.log("Before API call to /api/upload");
       const response = await API.post(
         "/api/upload",
         formData
       );
+      console.log("After API call, response received:", response.data);
 
       setFileId(response.data.file_id);
       sessionStorage.setItem('fileId', response.data.file_id);
       sessionStorage.setItem('fileName', file.name);
       setSheets(response.data.sheets);
       sessionStorage.setItem('sheets', JSON.stringify(response.data.sheets));
-      if (response.data.sheets && response.data.sheets.length > 0) {
+
+      if (response.data?.sheets?.length > 0) {
         setSelectedSheet(response.data.sheets[0]);
         sessionStorage.setItem('selectedSheet', response.data.sheets[0]);
       }
       setDatasetPreview(null);
 
     } catch (error) {
-      console.error(error);
-      setErrorMsg(error.response?.data?.detail || "An unexpected error occurred during upload.");
+      console.error("Caught error during upload:", error);
+      const detail = error.response?.data?.detail || "An unexpected error occurred during upload. Check network and backend status.";
+      setErrorMsg(detail);
     } finally {
+      console.log("Upload process finished, resetting loading state.");
       setLoading(false);
     }
-
-
   };
 
   const handleProcessSheet = async () => {
@@ -205,7 +207,7 @@ export default function Upload() {
 
         {!fileId && (
           <button
-            onClick={handleUpload}
+            onClick={() => handleUpload()}
             disabled={!file || loading}
             className="mt-6 bg-cyan-500 hover:bg-cyan-400 transition-all duration-300 text-black font-semibold px-8 py-3 rounded-xl disabled:opacity-50"
           >
