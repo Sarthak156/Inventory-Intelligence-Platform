@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useContext } from "react";
 import { 
   TrendingUp, 
   LineChart as LineChartIcon, 
@@ -556,7 +556,7 @@ const Forecast = () => {
           </div>
         )}
         
-        <div className="w-full" style={{ height: 400, minWidth: 0 }}>
+        <div className="w-full h-[400px] min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />

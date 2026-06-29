@@ -307,7 +307,7 @@ const MainForecastChart = ({ data, selectedHorizon, setSelectedHorizon, chartDat
         ))}
       </div>
     </div>
-    <div className="w-full" style={{ height: 300, minWidth: 0 }}>
+    <div className="w-full h-[300px] min-w-0">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <defs>
