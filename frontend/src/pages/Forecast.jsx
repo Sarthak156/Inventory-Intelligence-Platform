@@ -12,7 +12,8 @@ import {
   AlertCircle,
   AlertTriangle,
   Info,
-  Zap
+  Zap,
+  Download
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -27,7 +28,9 @@ import {
 } from "recharts";
 import API from "../services/api";
 import useAIInsights from "../hooks/useAIInsights";
-import AIInsightPanel from "../components/ai/AIInsightPanel";
+import AIInsightPanel from "/src/components/ai/AIInsightPanel";
+import ExportButton from "./ExportButton";
+import ExportForecastModal from "./ExportForecastModal";
 
 const formatCompact = (num) => {
   if (num === null || num === undefined) return "0";
@@ -225,6 +228,7 @@ const Forecast = () => {
   const [selectedHorizon, setSelectedHorizon] = useState('3M');
   const [activePartsCount, setActivePartsCount] = useState(0);
   const [isFetchingPart, setIsFetchingPart] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const horizons = ['1M', '3M', '6M', '12M'];
   
   const processDemandData = (dataObj) => {
@@ -467,7 +471,10 @@ const Forecast = () => {
             }
           </p>
         </div>
-        <PartSelector parts={parts} selectedPart={selectedPart} setSelectedPart={setSelectedPart} />
+        <div className="flex flex-col sm:flex-row gap-3 items-start">
+          <PartSelector parts={parts} selectedPart={selectedPart} setSelectedPart={setSelectedPart} />
+          <ExportButton onClick={() => setIsExportModalOpen(true)} />
+        </div>
       </div>
 
       {/* KPI CARDS */}
@@ -636,6 +643,13 @@ const Forecast = () => {
           )}
         </div>
       </div>
+
+      <ExportForecastModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        allParts={parts}
+        currentPart={selectedPart}
+      />
     </div>
   );
 };
