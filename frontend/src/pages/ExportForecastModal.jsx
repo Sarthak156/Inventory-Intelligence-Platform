@@ -46,13 +46,24 @@ const ExportForecastModal = ({ isOpen, onClose, allParts, currentPart }) => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      setSelectedParts(currentPart && currentPart !== 'ALL_PARTS' ? [currentPart] : []); // Reset state
       onClose();
 
     } catch (err) {
-      const errorData = await err.response?.data?.text();
-      const errorJson = errorData ? JSON.parse(errorData) : {};
-      setError(errorJson.detail || 'An unexpected error occurred during export.');
-      console.error("Export failed:", err);
+      let errorMessage = 'An unexpected error occurred during export.';
+      if (err.response && err.response.data) {
+        // The response data is a blob, so we need to read it as text
+        const errorText = await err.response.data.text();
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.detail || errorMessage;
+        } catch (e) {
+          // If it's not JSON, use the raw text
+          errorMessage = errorText || errorMessage;
+        }
+      }
+      setError(errorMessage);
+      console.error("Export failed:", err, "Message:", errorMessage);
     } finally {
       setIsExporting(false);
     }

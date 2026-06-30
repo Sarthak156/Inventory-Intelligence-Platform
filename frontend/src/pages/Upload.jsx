@@ -5,7 +5,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  ChevronDown
+  ChevronDown,
+  TrendingUp
 } from "lucide-react"; 
 import { useNavigate } from "react-router-dom";
 
@@ -424,6 +425,15 @@ export default function Upload() {
 
         </div>
 
+        <div className="mt-8 flex justify-center">
+            <button
+              onClick={() => navigate('/forecast')}
+              className="inline-flex items-center gap-2 theme-button-cyan py-2.5 px-6 rounded-xl transition-all text-sm font-medium"
+            >
+              <TrendingUp size={16} />
+              View Forecast
+            </button>
+        </div>
       </div>
 
     )}
