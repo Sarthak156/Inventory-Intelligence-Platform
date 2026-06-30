@@ -35,7 +35,7 @@ const MultiSelectPartsDropdown = ({ allParts, selectedParts, setSelectedParts })
   };
 
   const clearAll = () => {
-    setSelectedParts([]); // Ensure this always sets to an empty array
+    setSelectedParts([]); // CRITICAL: Always set to an empty array, never null.
   };
 
   return (
