@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Download, Package, Calendar, FileText, FileSpreadsheet, Loader2, AlertTriangle } from 'lucide-react';
 import MultiSelectPartsDropdown from './MultiSelectPartsDropdown';
 import API from '../services/api';
@@ -10,6 +10,17 @@ const ExportForecastModal = ({ isOpen, onClose, allParts, currentPart }) => {
   const [format, setFormat] = useState('xlsx');
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // This effect synchronizes the modal's state with its props when it opens.
+    // This is a critical fix for production builds where state might not reset as expected between renders.
+    if (isOpen) {
+      const isSpecificPart = currentPart && currentPart !== 'ALL_PARTS';
+      setPartSelectionMode(isSpecificPart ? 'specific' : 'all');
+      setSelectedParts(isSpecificPart ? [currentPart] : []);
+      setError(null); // Clear previous errors when modal re-opens
+    }
+  }, [isOpen, currentPart]);
 
   const handleExport = async () => {
     if (partSelectionMode === 'specific' && (!Array.isArray(selectedParts) || selectedParts.length === 0)) {
