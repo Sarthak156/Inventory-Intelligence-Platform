@@ -21,11 +21,14 @@ const ExportForecastModal = ({ isOpen, onClose, allParts, currentPart }) => {
     setError(null);
  
     try {
+      const partsToExport = partSelectionMode === 'all' ? ['ALL_PARTS'] : (selectedParts || []);
       const payload = {
-        parts: partSelectionMode === 'all' ? ['ALL_PARTS'] : (selectedParts || []),
+        parts: partsToExport,
         horizon: horizon,
         format: format,
       };
+
+      console.log("Initiating export with payload:", payload);
 
       const response = await API.post('/api/export-forecast', payload, {
         responseType: 'blob',
