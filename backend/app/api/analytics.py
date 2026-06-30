@@ -7,6 +7,8 @@ import numpy as np
 from typing import List, Union
 from io import BytesIO
 from datetime import datetime
+import logging
+import tempfile
 
 router = APIRouter()
 
@@ -15,6 +17,8 @@ DATA_FILE = "data/transformed_data.csv"
 # --- In-Memory Cache ---
 _cached_df = None
 _cached_mtime = 0
+
+logger = logging.getLogger(__name__)
 
 def get_cached_df():
     global _cached_df, _cached_mtime
@@ -381,107 +385,121 @@ async def export_forecast(
     format: str = Body(..., embed=True)
 ):
     """
-    Generates and streams a forecast export file (CSV or Excel).
+    Generates and streams a forecast export file (CSV or Excel) using a memory-efficient approach.
     """
+    MAX_EXPORT_ROWS = 50000
+    logger.info(f"Export requested. Format: {format}, Horizon: {horizon}, Parts requested: {len(parts)}")
+
     from app.services.risk_engine import calculate_inventory_risk
 
     df = get_cached_df()
     if df is None or df.empty:
         raise HTTPException(status_code=404, detail="No data available to export.")
 
-    try:
-        risk_data = calculate_inventory_risk(df)
-        risk_df = pd.DataFrame(risk_data).set_index('Part No')
-    except Exception:
-        risk_df = pd.DataFrame(columns=['Risk', 'DemandTrend']).set_index('Part No')
-
-    export_data = []
-    
     part_list = parts
     if "ALL_PARTS" in parts:
         part_list = sorted(df["Part No"].dropna().unique().tolist())
+    
+    logger.info(f"Processing export for {len(part_list)} parts.")
 
-    for part_no in part_list:
-        # This re-uses the same core logic as the main forecast view
-        demand_details = await get_monthly_demand(part_no)
-        
-        if not demand_details or not demand_details.get("items"):
-            continue
+    try:
+        risk_data = calculate_inventory_risk(df)
+        risk_df = pd.DataFrame(risk_data).set_index('Part No')
+    except Exception as e:
+        logger.warning(f"Could not calculate risk data for export, proceeding without it. Error: {e}")
+        risk_df = pd.DataFrame(columns=['Risk', 'DemandTrend']).set_index('Part No')
 
-        part_forecast = pd.DataFrame(demand_details["items"])
-        future_forecast = part_forecast[part_forecast['Is_Future'] == True].head(horizon)
+    async def data_generator():
+        total_rows = 0
+        # CSV Header
+        if format == 'csv':
+            header = "Part Number,Part Name,Forecast Month,Forecast Value,Confidence Lower,Confidence Upper,Risk Level,Demand Trend,Forecast Generated Date\n"
+            yield header.encode('utf-8')
 
-        if future_forecast.empty:
-            continue
+        for i, part_no in enumerate(part_list):
+            if total_rows >= MAX_EXPORT_ROWS:
+                logger.warning(f"Export limit of {MAX_EXPORT_ROWS} rows reached. Stopping export.")
+                if format == 'csv':
+                    yield f"\nNOTE: Export truncated at {MAX_EXPORT_ROWS} rows.".encode('utf-8')
+                break
+            
+            if (i + 1) % 100 == 0:
+                logger.info(f"Processed {i+1}/{len(part_list)} parts for export...")
 
-        risk_info = risk_df.loc[part_no] if part_no in risk_df.index else None
+            demand_details = await get_monthly_demand(part_no)
+            if not demand_details or not demand_details.get("items"):
+                continue
 
-        for _, row in future_forecast.iterrows():
-            export_data.append({
-                "Part Number": part_no,
-                "Part Name": risk_info.get('Part Name', 'N/A') if risk_info is not None else 'N/A',
-                "Forecast Month": row['Month'],
-                "Forecast Value": row['Forecast'],
-                "Confidence Lower": round(row['Forecast'] * 0.85) if row['Forecast'] is not None else None, # Placeholder
-                "Confidence Upper": round(row['Forecast'] * 1.15) if row['Forecast'] is not None else None, # Placeholder
-                "Risk Level": risk_info.get('Risk', 'UNKNOWN') if risk_info is not None else 'UNKNOWN',
-                "Demand Trend": risk_info.get('DemandTrend', 'FLAT') if risk_info is not None else 'FLAT',
-                "Forecast Generated Date": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            })
+            part_forecast = pd.DataFrame(demand_details["items"])
+            future_forecast = part_forecast[part_forecast['Is_Future'] == True].head(horizon)
 
-    if not export_data:
-        raise HTTPException(status_code=404, detail="No forecast data found for the selected criteria.")
+            if future_forecast.empty:
+                continue
 
-    export_df = pd.DataFrame(export_data)
+            risk_info = risk_df.loc[part_no] if part_no in risk_df.index else {}
+            
+            for _, row in future_forecast.iterrows():
+                if total_rows >= MAX_EXPORT_ROWS: break
+                
+                forecast_val = row['Forecast']
+                data_row = {
+                    "Part Number": part_no,
+                    "Part Name": risk_info.get('Part Name', 'N/A'),
+                    "Forecast Month": row['Month'],
+                    "Forecast Value": forecast_val,
+                    "Confidence Lower": round(forecast_val * 0.85) if forecast_val is not None else '',
+                    "Confidence Upper": round(forecast_val * 1.15) if forecast_val is not None else '',
+                    "Risk Level": risk_info.get('Risk', 'UNKNOWN'),
+                    "Demand Trend": risk_info.get('DemandTrend', 'FLAT'),
+                    "Forecast Generated Date": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+                
+                if format == 'csv':
+                    csv_row = ",".join([f'"{v}"' for v in data_row.values()]) + "\n"
+                    yield csv_row.encode('utf-8')
+                else: # for excel
+                    yield data_row
+                
+                total_rows += 1
+        logger.info(f"Export generation complete. Total rows: {total_rows}")
 
     if format == 'xlsx':
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            export_df.to_excel(writer, sheet_name='Forecast_Data', index=False)
-            
-            # Create metadata sheet for enterprise feel
-            metadata = {
-                "Export Timestamp": [datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')],
-                "Forecast Horizon": [f"{horizon} Months"],
-                "Parts Selected": [len(part_list)],
-                "Export Format": ["Excel (.xlsx)"],
-                "Generated By": ["Inventory Intelligence Platform"],
-                "AI Model Version": ["v2.1.0-sparse-hybrid"],
-            }
-            pd.DataFrame(metadata).to_excel(writer, sheet_name='Export_Metadata', index=False)
+        async def excel_stream_generator():
+            with tempfile.NamedTemporaryFile(delete=True, suffix=".xlsx", mode='w+b') as tmp:
+                logger.info(f"Using temporary file for Excel export: {tmp.name}")
+                workbook = pd.ExcelWriter(tmp, engine='xlsxwriter')
+                worksheet = workbook.book.add_worksheet('Forecast_Data')
+                
+                # Add a bold format for the header.
+                header_format = workbook.book.add_format({'bold': True})
+                headers = ["Part Number", "Part Name", "Forecast Month", "Forecast Value", "Confidence Lower", "Confidence Upper", "Risk Level", "Demand Trend", "Forecast Generated Date"]
+                for col_num, value in enumerate(headers):
+                    worksheet.write(0, col_num, value, header_format)
 
-            # Auto-adjust column widths
-            forecast_sheet = writer.sheets['Forecast_Data']
-            for idx, col in enumerate(export_df):
-                series = export_df[col]
-                max_len = max((
-                    series.astype(str).map(len).max(),
-                    len(str(series.name))
-                )) + 2
-                forecast_sheet.set_column(idx, idx, max_len)
+                row_num = 1
+                async for data_row in data_generator():
+                    for col_num, value in enumerate(data_row.values()):
+                        worksheet.write(row_num, col_num, value)
+                    row_num += 1
+                
+                if row_num > MAX_EXPORT_ROWS:
+                    worksheet.write(row_num, 0, f"NOTE: Export truncated at {MAX_EXPORT_ROWS} rows.")
 
-            meta_sheet = writer.sheets['Export_Metadata']
-            meta_sheet.set_column(0, 0, 25)
-            meta_sheet.set_column(1, 1, 30)
+                workbook.close()
+                
+                tmp.seek(0)
+                while chunk := tmp.read(65536):
+                    yield chunk
+            logger.info("Finished streaming temporary Excel file and cleaned up.")
 
-        output.seek(0)
-        
-        return StreamingResponse(
-            output,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f"attachment; filename=forecast_export_{datetime.now().strftime('%Y%m%d')}.xlsx"}
-        )
+        filename = f"forecast_export_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        headers = {"Content-Disposition": f"attachment; filename={filename}"}
+        return StreamingResponse(excel_stream_generator(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers=headers)
 
     elif format == 'csv':
-        output = BytesIO()
-        export_df.to_csv(output, index=False)
-        output.seek(0)
-        
-        return StreamingResponse(
-            output,
-            media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename=forecast_export_{datetime.now().strftime('%Y%m%d')}.csv"}
-        )
+        filename = f"forecast_export_{datetime.now().strftime('%Y%m%d')}.csv"
+        headers = {"Content-Disposition": f"attachment; filename={filename}"}
+        return StreamingResponse(data_generator(), media_type="text/csv", headers=headers)
 
     else:
         raise HTTPException(status_code=400, detail="Invalid export format specified.")

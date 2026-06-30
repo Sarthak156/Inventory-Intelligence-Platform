@@ -96,11 +96,6 @@ export default function Upload() {
       console.log("Sheet processing successful, response received:", response.data);
       setDatasetPreview(response.data);
 
-      // On success, navigate to the forecast page to see the new data.
-      // This is a more robust UX than staying on the upload page.
-      console.log("Navigating to /forecast to reflect updated data.");
-      navigate("/forecast");
-
     } catch (error) {
       console.error("Caught error during sheet processing:", error);
       setErrorMsg(error.response?.data?.detail || "An unexpected error occurred during sheet processing.");

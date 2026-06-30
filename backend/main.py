@@ -1,30 +1,27 @@
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import upload, analytics
+from app.api import analytics, upload
 import os
-
-# Ensure necessary directories exist
-os.makedirs("uploads", exist_ok=True)
-os.makedirs("data", exist_ok=True)
 
 app = FastAPI(
     title="Inventory Intelligence API",
-    description="API for the Inventory Intelligence Platform.",
-    version="1.0.0"
+    description="API for demand forecasting, risk analysis, and inventory optimization.",
+    version="1.0.0",
 )
+
+# Configure CORS
+origins = [
+    "http://localhost:5173",  # Local dev server
+    os.environ.get("FRONTEND_URL") # Vercel deployment URL from env var
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], # Using wildcard for broad compatibility in this demo context. For production, use the `origins` list.
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.get("/")
-def root():
-    return {"status": "running"}
-
-app.include_router(upload.router, prefix="/api", tags=["Upload"])
-app.include_router(analytics.router, prefix="/api", tags=["Analytics"])
+app.include_router(upload.router, prefix="/api", tags=["Data Upload & Processing"])
+app.include_router(analytics.router, prefix="/api", tags=["Analytics & Forecasting"])

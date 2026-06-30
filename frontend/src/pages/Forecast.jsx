@@ -557,43 +557,49 @@ const Forecast = () => {
         )}
         
         <div className="w-full h-[400px] min-w-0">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis
-                dataKey="Month"
-                stroke="var(--theme-muted)"
-                fontSize={10}
-                tickLine={false}
-                axisLine={false}
-                tickMargin={10}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-                interval={0}
-              />
-              <YAxis stroke="var(--theme-muted)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={formatCompact} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: "12px", marginTop: "10px" }} />
-              <Line
-                type="monotone"
-                dataKey="Demand"
-                name="Historical Demand"
-                stroke="var(--theme-cyan)"
-                strokeWidth={3}
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="Forecast"
-                name="Forecast"
-                stroke="#8b5cf6"
-                strokeWidth={3}
-                strokeDasharray="6 6"
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {isFetchingPart ? (
+            <div className="w-full h-full flex items-center justify-center theme-bg-card-soft rounded-lg">
+              <Loader2 size={24} className="animate-spin text-cyan-500" />
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis
+                  dataKey="Month"
+                  stroke="var(--theme-muted)"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={10}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                  interval={0}
+                />
+                <YAxis stroke="var(--theme-muted)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={formatCompact} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: "12px", marginTop: "10px" }} />
+                <Line
+                  type="monotone"
+                  dataKey="Demand"
+                  name="Historical Demand"
+                  stroke="var(--theme-cyan)"
+                  strokeWidth={3}
+                  dot={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Forecast"
+                  name="Forecast"
+                  stroke="#8b5cf6"
+                  strokeWidth={3}
+                  strokeDasharray="6 6"
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 

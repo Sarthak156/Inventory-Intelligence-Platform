@@ -45,7 +45,7 @@ const MultiSelectPartsDropdown = ({ allParts, selectedParts, setSelectedParts })
         onClick={() => setIsOpen(true)}
       >
         <Package size={16} className="theme-cyan flex-shrink-0" />
-        {(!selectedParts || selectedParts.length === 0) && <span className="theme-muted">Select parts...</span>}
+        {(!Array.isArray(selectedParts) || selectedParts.length === 0) && <span className="theme-muted">Select parts...</span>}
         {Array.isArray(selectedParts) && selectedParts.map(part => (
           <span key={part} className="flex items-center gap-1.5 bg-cyan-500/10 text-cyan-300 text-xs font-medium px-2 py-1 rounded">
             {part}
