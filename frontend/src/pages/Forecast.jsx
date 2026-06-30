@@ -556,7 +556,7 @@ const Forecast = () => {
           </div>
         )}
         
-        <div className="w-full h-[400px] min-w-0">
+        <div className="w-full h-[400px]">
           {isFetchingPart ? (
             <div className="w-full h-full flex items-center justify-center theme-bg-card-soft rounded-lg">
               <Loader2 size={24} className="animate-spin text-cyan-500" />

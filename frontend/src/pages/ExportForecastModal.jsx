@@ -50,10 +50,12 @@ const ExportForecastModal = ({ isOpen, onClose, allParts, currentPart }) => {
       link.href = url;
       const contentDisposition = response.headers['content-disposition'];
       let filename = `forecast_export.${format}`;
+      // ROBUST FIX: Handles both quoted and unquoted filenames from Content-Disposition
       if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-          if (filenameMatch.length === 2)
-              filename = filenameMatch[1];
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (filenameMatch && filenameMatch[1]) {
+              filename = filenameMatch[1].replace(/['"]/g, '');
+          }
       }
       link.setAttribute('download', filename);
       document.body.appendChild(link);
