@@ -22,7 +22,7 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 
 | Dashboard                                        | Uploading                                  |
 | ------------------------------------------------ | ------------------------------------------ |
-| ![Dashboard Preview](image/README/dashboard.png) | ![Upload Preview](image\README\upload.png) |
+| ![Dashboard Preview](image/README/dashboard.png) | ![Upload Preview](image/README/upload.png) |
 
 | Forecasting                                    | Inventory Analytics                              |
 | ---------------------------------------------- | ------------------------------------------------ |
