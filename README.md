@@ -1,455 +1,462 @@
-# 🚀 Inventory Intelligence Platform
+# Inventory Intelligence Platform
 
-> AI-Powered Forecasting, Risk Surveillance & Inventory Optimization System
-> Built during internship as an enterprise-style operational intelligence platform.
+**AI-Powered Inventory Forecasting & Operational Intelligence Platform**
 
----
-
-# 📌 Overview
-
-The **Inventory Intelligence Platform** is a full-stack operational analytics system designed to transform raw inventory and demand datasets into actionable intelligence through:
-
-* 📈 Forecasting & Demand Analytics
-* ⚠️ Risk Surveillance
-* 📦 Inventory Optimization
-* 🧠 Explainable AI Insights
-* 🏛️ Enterprise Operational Dashboards
-
-Unlike traditional dashboards that only visualize historical data, this platform focuses on:
-
-* operational decision-making
-* sparse-demand forecasting
-* explainability
-* interactive intelligence workflows
-* enterprise-grade UX systems
-
-The project evolved from a basic forecasting dashboard into a multi-layer operational intelligence platform inspired by modern enterprise analytics systems.
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=flat-square&logo=vercel)](https://inventory-intelligence.vercel.app)
+[![Backend on HuggingFace](https://img.shields.io/badge/Backend-HuggingFace%20Spaces-FFD21E?style=flat-square&logo=huggingface)](https://huggingface.co/spaces/inventory-intelligence/api)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python)](https://python.org)
 
 ---
 
-# 🎯 Key Objectives
+## Overview
 
-The system was designed to solve real-world inventory forecasting and monitoring challenges such as:
+Inventory Intelligence Platform is an enterprise-grade, AI-driven operational intelligence system designed for supply chain analytics, demand forecasting, inventory risk assessment, and automated recommendations. The platform transforms raw inventory data into actionable intelligence through a sophisticated multi-engine architecture.
 
-* Sparse and intermittent demand
-* Large-scale SKU monitoring
-* Forecast instability
-* Operational risk analysis
-* Inventory intelligence generation
-* Explainable forecasting workflows
+Built for operations teams, supply chain analysts, and inventory managers, the platform provides real-time visibility into stock health, demand patterns, and risk exposure across thousands of SKUs.
 
 ---
 
-# 🏗️ System Architecture
+## Screenshots
 
-```text
-Excel / CSV Upload
-        ↓
-Data Transformation Engine
-        ↓
-Preprocessing & Aggregation
-        ↓
-Forecast Intelligence Layer
-        ↓
-Risk Analytics Engine
-        ↓
-Inventory Optimization Engine
-        ↓
-Operational Intelligence Dashboard
-```
+> *Screenshots to be added. Place your dashboard, forecast, inventory, and risk page screenshots in the `image/README/` directory.*
 
----
+| Dashboard | Forecasting |
+|-----------|-------------|
+| ![Dashboard Preview](image/README/1782031373576.png) | ![Forecast Preview](image/README/1782031393859.png) |
 
-# ⚙️ Core Features
+| Inventory Analytics | Risk Assessment |
+|--------------------|-----------------|
+| ![Inventory Preview](image/README/1782031437561.png) | ![Risk Preview](image/README/1782031442317.png) |
 
----
-
-## 📂 1. Smart Data Ingestion System
-
-### Supported Formats
-
-* CSV
-* XLSX / Excel
-
-### Features
-
-* Multi-sheet Excel support
-* Dynamic sheet selection
-* Dataset preview system
-* Automatic transformation pipeline
-* Large dataset handling
-* Date normalization
-* Missing value handling
-
-### Highlights
-
-* Handles datasets with 35k+ rows efficiently
-* Prevents transformation failures caused by inconsistent formatting
-
----
-
-# 📈 2. Forecast Intelligence Engine
-
-The forecasting module analyzes historical demand patterns and generates operational demand projections.
-
----
-
-## Forecasting Features
-
-### ✅ Multi-Horizon Forecasting
-
-Supports:
-
-* 1 Month Forecast
-* 3 Month Forecast
-* 6 Month Forecast
-* 12 Month Forecast
-
----
-
-### ✅ Part-Wise Forecasting
-
-Each inventory part is forecasted individually to provide SKU-level intelligence.
-
----
-
-### ✅ Rolling Trend Analytics
-
-* Rolling averages
-* Demand smoothing
-* Trend stabilization
-
----
-
-### ✅ Hybrid Sparse-Demand Forecasting
-
-One of the most important features of the platform.
-
-The system intelligently handles:
-
-* sparse demand
-* intermittent inventory activity
-* inactive SKUs
-* unstable historical patterns
-
-Using:
-
-* hierarchical fallback strategies
-* adaptive forecasting continuity
-* operational governance logic
-
----
-
-# 🧠 3. Hierarchical Forecasting Strategy
-
-The platform uses a layered forecasting architecture:
-
-```text
-PART LEVEL
-    ↓
-HALB LEVEL
-    ↓
-GLOBAL FALLBACK LEVEL
-```
-
-This ensures:
-
-* forecast continuity
-* stability for sparse-demand SKUs
-* resilience against insufficient historical data
-
----
-
-# ⚠️ 4. Risk Intelligence Engine
-
-The Risk Engine transforms forecasting outputs into operational risk intelligence.
-
----
-
-## Risk Metrics
-
-The platform calculates:
-
-* Demand Volatility
-* Forecast Instability
-* Sparsity Ratio
-* Demand Acceleration
-* Confidence Levels
-
----
-
-## Risk Classification
-
-Each SKU is categorized as:
-
-* LOW RISK
-* MEDIUM RISK
-* HIGH RISK
-
----
-
-## Explainability Tags
-
-Operational reasoning is surfaced using explainable telemetry tags such as:
-
-* HIGH VOLATILITY
-* SPARSE DEMAND
-* FORECAST SURGE
-* STABLE SKU
-* INTERMITTENT DEMAND
-
----
-
-# 📦 5. Inventory Command Center
-
-The Inventory Optimization module acts as a live operational workspace for inventory monitoring.
+| AI Insights | Recommendations |
+|-------------|-----------------|
+| ![AI Insights Preview](image/README/1782031448232.png) | ![Recommendations Preview](image/README/1782031452013.png) |
 
 ---
 
 ## Features
 
-### 📊 Executive KPI Cards
+### 🔮 Forecasting Engine
+- Multi-strategy demand forecasting with 3-month rolling average
+- Sparse demand detection and specialized handling for intermittent SKUs
+- HALB (category-level) fallback for low-confidence forecasts
+- 12-month forward projection with iterative moving average
+- Confidence scoring with volatility-adjusted metrics
+- Per-SKU forecast state classification (ACTIVE, SPARSE, DORMANT, INACTIVE)
 
-Displays:
+### 📦 Inventory Optimization
+- Real-time inventory risk scoring across all SKUs
+- Multi-dimensional risk assessment (volatility, sparsity, forecast growth)
+- Automated stock-out prediction with ETA calculation
+- Safety stock recommendations based on risk profiles
+- Inventory health distribution (Healthy, Monitor, At Risk, Critical)
 
-* Active SKUs
-* Optimization Readiness
-* Critical Alerts
-* Demand Acceleration
+### ⚠️ Risk Assessment
+- Composite risk scoring engine with weighted dimensions
+- SKU state classification (Stable, Volatile, Sparse, Dormant, Surging)
+- Explainable risk tagging with root cause identification
+- Demand trend analysis (UP, DOWN, STABLE)
+- Confidence scoring per SKU with transparency
 
----
+### 🤖 Recommendation Engine
+- AI-driven operational insights with severity classification
+- Automated action recommendations (Increase Safety Stock, Monitor Closely, Maintain)
+- Critical alert generation for high-risk SKUs
+- Telemetry-based insight generation
+- Fallback insight templates for offline resilience
 
-### 📡 LIVE Operational Monitoring
+### 📊 Export System
+- Multi-format forecast export (CSV, XLSX)
+- Streaming export for large datasets with 50,000 row limit
+- Confidence interval inclusion (Lower/Upper bounds)
+- Risk metadata embedded in exports
+- Memory-efficient generator-based architecture
 
-Real-time operational telemetry indicators.
+### 📤 Upload & Processing Pipeline
+- Multi-sheet Excel and CSV file support
+- Automatic sheet detection and selection
+- Intelligent column normalization (Part Number, SKU, Item → Part No)
+- Wide-to-long format transformation
+- Data validation with descriptive error messages
+- Streaming file upload to disk
 
----
+### 📈 Operational Dashboard
+- Real-time KPI monitoring (8 metric cards with sparklines)
+- Global demand vs AI forecast visualization
+- Risk distribution pie chart with drill-down
+- High-risk SKU table with actionable recommendations
+- Inventory health bar chart
+- AI Insight Engine panel with severity-coded cards
+- Critical alert banner with animated indicators
 
-### 🎛️ Strategic Modes
-
-* Conservative
-* Balanced
-* Aggressive
-
----
-
-### 🧠 AI Operations Insights
-
-Intelligence summaries generated using operational metrics.
-
----
-
-### 📈 Interactive SKU Intelligence Drawer
-
-Each SKU opens a detailed intelligence panel containing:
-
-* Historical demand
-* Forecast trends
-* Operational confidence
-* AI recommendations
-* Telemetry status
-
----
-
-# 🎨 6. Enterprise UX & Dashboard Systems
-
-The project heavily focuses on operational UX design.
-
----
-
-## UX Features
-
-* Interactive dashboards
-* Intelligence drilldowns
-* Operational telemetry
-* LIVE monitoring indicators
-* Confidence systems
-* Modal intelligence drawers
-* Explainable forecasting
-* Responsive layouts
-* Enterprise-style visual hierarchy
-
----
-
-# 🤖 7. AI Recommendation Architecture
-
-The platform includes an extensible AI recommendation framework.
+### 🧠 AI Insights
+- Severity-classified insights (CRITICAL, WARNING, OPTIMIZATION, INFO)
+- Confidence-scored recommendations
+- Gemini API integration for enhanced intelligence
+- Local fallback insight generation engine
+- Cached insight delivery for performance
 
 ---
 
-## Planned AI Features
+## Architecture Overview
 
-* Operational recommendation engine
-* Executive intelligence summaries
-* Forecast commentary
-* SKU explanation generation
-* Natural-language inventory queries
-
----
-
-## Current Architecture
-
-The AI layer is designed as:
-
-* enhancement system
-* non-blocking intelligence layer
-* operational co-pilot
-
-This ensures platform resilience even if AI services become unavailable.
-
----
-
-# 🧩 Tech Stack
-
-## Frontend
-
-* React.js
-* Vite
-* TailwindCSS
-* Recharts
-* Lucide Icons
-
----
-
-## Backend
-
-* Python
-* FastAPI
-
----
-
-## Data Processing
-
-* Pandas
-* NumPy
-
----
-
-## Forecasting & Analytics
-
-* Time-Series Aggregation
-* Rolling Forecast Logic
-* Hybrid Sparse-Demand Strategy
-
----
-
-# 📊 Key Data Science Concepts Implemented
-
-* Time-Series Forecasting
-* Sparse Demand Handling
-* Hierarchical Forecasting
-* Rolling Trend Analytics
-* Inventory Risk Scoring
-* Explainable AI Concepts
-* Operational Intelligence Systems
-* Forecast Confidence Systems
-
----
-
-# 🧠 Major Learning Outcomes
-
-Through this project, the following practical industry concepts were explored:
-
-* Real-world data preprocessing
-* Forecast instability management
-* Operational analytics design
-* Explainable intelligence systems
-* Product-oriented data science
-* Enterprise dashboard architecture
-* Human-centered analytics workflows
-
----
-
-# 📁 Project Modules
-
-```text
-frontend/
-│
-├── pages/
-│   ├── Upload.jsx
-│   ├── Forecast.jsx
-│   ├── Risks.jsx
-│   ├── Inventory.jsx
-│   └── Settings.jsx
-│
-├── components/
-│
-└── services/
-    └── api.js
-
-
-backend/
-│
-├── routes/
-├── services/
-├── forecasting/
-├── analytics/
-└── data/
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Frontend (Vercel)                         │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────┐  │
+│  │Dashboard │  │Forecast  │  │Inventory │  │Recommend.  │  │
+│  │  Page    │  │  Page    │  │  Page    │  │  Page      │  │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └─────┬──────┘  │
+│       └──────────────┴─────────────┴──────────────┘         │
+│                        │                                     │
+│              ┌─────────▼──────────┐                          │
+│              │   React Context    │                          │
+│              │   (DataContext)    │                          │
+│              └─────────┬──────────┘                          │
+│                        │                                     │
+│              ┌─────────▼──────────┐                          │
+│              │   API Service      │                          │
+│              │   (Axios Client)   │                          │
+│              └─────────┬──────────┘                          │
+└────────────────────────┼─────────────────────────────────────┘
+                         │ HTTP / JSON
+┌────────────────────────┼─────────────────────────────────────┐
+│              ┌─────────▼──────────┐     Backend (HF Spaces)  │
+│              │   FastAPI Server   │                          │
+│              │   (Uvicorn)        │                          │
+│              └─────────┬──────────┘                          │
+│                        │                                     │
+│        ┌───────────────┼───────────────┐                     │
+│        ▼               ▼               ▼                     │
+│  ┌──────────┐   ┌──────────┐   ┌──────────────┐             │
+│  │ Upload   │   │Analytics │   │  Forecast    │             │
+│  │ Router   │   │ Router   │   │  Router      │             │
+│  └────┬─────┘   └────┬─────┘   └──────┬───────┘             │
+│       │              │                │                      │
+│       ▼              ▼                ▼                      │
+│  ┌──────────┐   ┌──────────┐   ┌──────────────┐             │
+│  │Data      │   │Risk      │   │Forecast      │             │
+│  │Transformer│   │Engine    │   │Calculator    │             │
+│  └────┬─────┘   └────┬─────┘   └──────┬───────┘             │
+│       │              │                │                      │
+│       └──────────────┴────────────────┘                      │
+│                      │                                       │
+│              ┌───────▼────────┐                              │
+│              │  Pandas/NumPy  │                              │
+│              │  Data Layer    │                              │
+│              └───────┬────────┘                              │
+│                      │                                       │
+│              ┌───────▼────────┐                              │
+│              │  CSV Storage   │                              │
+│              │  (transformed) │                              │
+│              └────────────────┘                              │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-# 🏛️ Platform Identity
+## Tech Stack
 
-| Module                   | Purpose                               |
-| ------------------------ | ------------------------------------- |
-| Upload Center            | Data ingestion & preprocessing        |
-| Forecast Intelligence    | Demand prediction & trend analysis    |
-| Risk Surveillance        | Operational threat monitoring         |
-| Inventory Command Center | Optimization & inventory intelligence |
-| AI Recommendation Engine | Strategic operational insights        |
+### Frontend
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 19.x | UI framework with hooks-based architecture |
+| Vite | 8.x | Build tool and dev server with HMR |
+| TailwindCSS | 4.x | Utility-first CSS framework |
+| Recharts | 3.x | Composable charting library |
+| React Router | 7.x | Client-side routing |
+| Axios | 1.x | HTTP client for API communication |
+| Lucide React | 1.x | Icon component library |
+| React Window | 2.x | Virtualized list rendering |
 
----
+### Backend
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| FastAPI | 0.115+ | Async Python web framework |
+| Uvicorn | - | ASGI server |
+| Pandas | 2.x | Data manipulation and analysis |
+| NumPy | 1.x | Numerical computing |
+| Python-dateutil | - | Date parsing utilities |
+| OpenPyXL | - | Excel file reading |
+| XlsxWriter | - | Excel file writing |
 
-# 🚀 Future Enhancements
-
-Planned improvements include:
-
-* Advanced ML forecasting models
-* AI-powered operational assistant
-* Anomaly detection engine
-* Supplier intelligence integration
-* Inventory simulation sandbox
-* Procurement optimization workflows
-* Live API-based synchronization
-
----
-
-# 📸 Screenshots
-
-
-![1782031442317](image/README/1782031442317.png)
-
-![1782031452013](image/README/1782031452013.png)
-
-![1782031521878](image/README/1782031521878.png)
-
-![1782031533150](image/README/1782031533150.png)
-
-![1782031549383](image/README/1782031549383.png)
-
-![1782031543035](image/README/1782031543035.png)
+### Deployment
+| Platform | Component | URL |
+|----------|-----------|-----|
+| Vercel | Frontend | [Production URL] |
+| HuggingFace Spaces | Backend API | [Backend URL] |
 
 ---
 
-# 🧑‍💻 Author
+## Installation
 
-**Sarthak Goyal**
-B.Tech Data Science Student
-Institute of Engineering & Science, IPS Academy, Indore
+### Prerequisites
+- Node.js 18+ and npm/pnpm
+- Python 3.11+
+- Git
+
+### Local Setup
+
+#### 1. Clone the Repository
+```bash
+git clone https://github.com/Sarthak156/Inventory-Intelligence-Platform.git
+cd inventory-intelligence-platform
+```
+
+#### 2. Backend Setup
+```bash
+cd backend
+
+# Create virtual environment
+python -m venv venv
+
+# Activate (Windows)
+venv\Scripts\activate
+
+# Activate (macOS/Linux)
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+#### 3. Frontend Setup
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+#### 4. Access the Application
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
 ---
 
-# 🎬 Final Note
+## Environment Setup
 
-This project represents the transformation of a traditional inventory dashboard into a full operational intelligence platform focused on:
+### Backend (.env)
+```env
+# Backend Configuration
+FRONTEND_URL=http://localhost:5173
+```
 
-* explainability
-* operational realism
-* forecasting intelligence
-* enterprise UX systems
-* decision-support workflows
-
-The goal was not only to forecast inventory demand, but to create a system capable of assisting operational decision-making in a realistic enterprise environment.
+### Frontend (.env)
+```env
+# API Base URL (for production deployment)
+VITE_API_BASE_URL=https://your-backend-url.space
+```
 
 ---
+
+## Deployment
+
+### Frontend (Vercel)
+```bash
+cd frontend
+npm run build
+vercel --prod
+```
+
+### Backend (HuggingFace Spaces)
+1. Create a new Space at [huggingface.co/spaces](https://huggingface.co/spaces)
+2. Select Docker SDK
+3. Push the `backend/` directory
+4. Set environment variables in Space settings
+
+---
+
+## Folder Structure
+
+```
+inventory-intelligence-platform/
+├── README.md
+├── .env.example
+├── .gitignore
+├── ARCHITECTURE.md
+├── INVESTIGATION_REPORT.md
+├── icon.png
+├── logo.png
+├── datasets/
+│   └── file1.xlsx
+├── image/
+│   └── README/
+│       ├── 1782031373576.png
+│       ├── 1782031393859.png
+│       ├── 1782031437561.png
+│       ├── 1782031442317.png
+│       ├── 1782031448232.png
+│       ├── 1782031452013.png
+│       ├── 1782031455668.png
+│       ├── 1782031459929.png
+│       ├── 1782031474671.png
+│       ├── 1782031493653.png
+│       ├── 1782031521878.png
+│       ├── 1782031533150.png
+│       ├── 1782031543035.png
+│       └── 1782031549383.png
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── SYSTEM_DESIGN.md
+│   ├── API_REFERENCE.md
+│   ├── DEPLOYMENT_GUIDE.md
+│   ├── RUNBOOK.md
+│   ├── SUPPORT_GUIDE.md
+│   ├── KNOWN_ISSUES.md
+│   ├── ROADMAP.md
+│   ├── CHANGELOG.md
+│   ├── PERFORMANCE_OPTIMIZATION.md
+│   ├── DATA_SCHEMA.md
+│   ├── FORECASTING_ENGINE.md
+│   ├── INVENTORY_OPTIMIZATION.md
+│   ├── RECOMMENDATION_ENGINE.md
+│   ├── TROUBLESHOOTING.md
+│   ├── SECURITY.md
+│   └── CONTRIBUTING.md
+├── backend/
+│   ├── main.py
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── .env
+│   ├── .gitignore
+│   ├── README.md
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── upload.py
+│   │   │   ├── analytics.py
+│   │   │   └── forecast.py
+│   │   ├── services/
+│   │   │   └── risk_engine.py
+│   │   ├── utils/
+│   │   │   └── data_transformer.py
+│   │   └── validation/
+│   │       └── data_validator.py
+│   ├── data/
+│   │   └── transformed_data.csv
+│   └── uploads/
+├── frontend/
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── eslint.config.js
+│   ├── .env
+│   ├── .env.example
+│   ├── .gitignore
+│   ├── public/
+│   │   ├── favicon.svg
+│   │   └── icons.svg
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx
+│       ├── App.css
+│       ├── index.css
+│       ├── spatial.css
+│       ├── assets/
+│       │   ├── hero.png
+│       │   ├── react.svg
+│       │   └── vite.svg
+│       ├── context/
+│       │   ├── DataContext.jsx
+│       │   └── ReactContexts.jsx
+│       ├── hooks/
+│       │   └── useAIInsights.js
+│       ├── layouts/
+│       │   └── MainLayout.jsx
+│       ├── pages/
+│       │   ├── Dashboard.jsx
+│       │   ├── Forecast.jsx
+│       │   ├── Inventory.jsx
+│       │   ├── Risks.jsx
+│       │   ├── Recommendations.jsx
+│       │   ├── Upload.jsx
+│       │   ├── Settings.jsx
+│       │   ├── ExportButton.jsx
+│       │   ├── ExportForecastModal.jsx
+│       │   └── MultiSelectPartsDropdown.jsx
+│       ├── components/
+│       │   ├── ai/
+│       │   │   ├── AIInsightPanel.jsx
+│       │   │   ├── AIStatus.jsx
+│       │   │   ├── ExecutiveBriefing.jsx
+│       │   │   └── LoadingPulse.jsx
+│       │   ├── recommendations/
+│       │   │   ├── AIInsightDrawer.jsx
+│       │   │   ├── AIRecommendationCard.jsx
+│       │   │   ├── PaginationControls.jsx
+│       │   │   ├── RecommendationFilters.jsx
+│       │   │   ├── RecommendationModal.jsx
+│       │   │   ├── RecommendationTable.jsx
+│       │   │   └── VirtualizedRecommendationList.jsx
+│       │   └── sidebar/
+│       │       └── Sidebar.jsx
+│       └── services/
+│           ├── api.js
+│           ├── aiInsights.js
+│           ├── geminiService.js
+│           └── utils/
+│               ├── aiInsightCache.js
+│               ├── fallbackInsights.js
+│               ├── insightTemplates.js
+│               └── recommendationEngine.js
+```
+
+---
+
+## Usage
+
+### 1. Upload Data
+Navigate to the **Upload** page. Upload an Excel (.xlsx) or CSV file containing inventory data with columns like Part Number, monthly demand values, and optional metadata.
+
+### 2. Process Sheet
+Select the appropriate sheet from your uploaded file. The system automatically transforms wide-format data into a normalized long format.
+
+### 3. Explore Dashboard
+The **AI Operations Command Center** provides real-time KPIs, risk distribution, demand vs forecast visualization, and AI-generated insights.
+
+### 4. Analyze Forecasts
+The **Forecast** page provides per-SKU demand forecasting with confidence scoring, state classification, and 12-month forward projections.
+
+### 5. Assess Inventory Risk
+The **Inventory** page offers searchable, filterable inventory data with pagination. The **Risks** page provides detailed risk scoring and classification.
+
+### 6. Review Recommendations
+The **Recommendations** page surfaces AI-driven operational recommendations with severity classification and actionable guidance.
+
+### 7. Export Forecasts
+Use the **Export** feature to download forecast data in CSV or Excel format with confidence intervals and risk metadata.
+
+---
+
+## Future Roadmap
+
+| Phase | Features |
+|-------|----------|
+| **Phase 1** | Authentication & RBAC, Real-time Forecasting, Redis Caching |
+| **Phase 2** | Async Exports, Background Jobs, Anomaly Detection, Supplier Intelligence |
+| **Phase 3** | ERP Integrations, AI Copilots, Predictive Procurement, Multi-warehouse |
+
+---
+
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+## Acknowledgments
+
+- Built with React, FastAPI, and the open-source ecosystem
+- Deployed on Vercel and HuggingFace Spaces
+- Powered by Pandas, NumPy, and Scikit-learn
