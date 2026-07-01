@@ -9,6 +9,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
+@app.get("/")
+def home():
+    return {"message": "Backend running"}
+
 # Configure CORS
 origins = [
     "http://localhost:5173",  # Local dev server
