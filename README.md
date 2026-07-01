@@ -20,25 +20,29 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 
 ## Screenshots
 
-> *Screenshots to be added. Place your dashboard, forecast, inventory, and risk page screenshots in the `image/README/` directory.*
+| Dashboard                                        | Uploading                                  |
+| ------------------------------------------------ | ------------------------------------------ |
+| ![Dashboard Preview](image/README/dashboard.png) | ![Upload Preview](image\README\upload.png) |
 
-| Dashboard | Forecasting |
-|-----------|-------------|
-| ![Dashboard Preview](image/README/1782031373576.png) | ![Forecast Preview](image/README/1782031393859.png) |
+| Forecasting                                    | Inventory Analytics                              |
+| ---------------------------------------------- | ------------------------------------------------ |
+| ![Forecast Preview](image/README/forecast.png) | ![Inventory Preview](image/README/inventory.png) |
 
-| Inventory Analytics | Risk Assessment |
-|--------------------|-----------------|
-| ![Inventory Preview](image/README/1782031437561.png) | ![Risk Preview](image/README/1782031442317.png) |
+| Risk Assessment                        | AI Recommendations                                 |
+| -------------------------------------- | -------------------------------------------------- |
+| ![Risk Preview](image/README/risk.png) | ![AI Recommendations Preview](image/README/ai.png) |
 
-| AI Insights | Recommendations |
-|-------------|-----------------|
-| ![AI Insights Preview](image/README/1782031448232.png) | ![Recommendations Preview](image/README/1782031452013.png) |
+| Settings                                        |
+| ----------------------------------------------- |
+| ![Settings Preview](image/README/settings.png)  |
 
 ---
+
 
 ## Features
 
 ### 🔮 Forecasting Engine
+
 - Multi-strategy demand forecasting with 3-month rolling average
 - Sparse demand detection and specialized handling for intermittent SKUs
 - HALB (category-level) fallback for low-confidence forecasts
@@ -47,6 +51,7 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 - Per-SKU forecast state classification (ACTIVE, SPARSE, DORMANT, INACTIVE)
 
 ### 📦 Inventory Optimization
+
 - Real-time inventory risk scoring across all SKUs
 - Multi-dimensional risk assessment (volatility, sparsity, forecast growth)
 - Automated stock-out prediction with ETA calculation
@@ -54,6 +59,7 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 - Inventory health distribution (Healthy, Monitor, At Risk, Critical)
 
 ### ⚠️ Risk Assessment
+
 - Composite risk scoring engine with weighted dimensions
 - SKU state classification (Stable, Volatile, Sparse, Dormant, Surging)
 - Explainable risk tagging with root cause identification
@@ -61,6 +67,7 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 - Confidence scoring per SKU with transparency
 
 ### 🤖 Recommendation Engine
+
 - AI-driven operational insights with severity classification
 - Automated action recommendations (Increase Safety Stock, Monitor Closely, Maintain)
 - Critical alert generation for high-risk SKUs
@@ -68,6 +75,7 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 - Fallback insight templates for offline resilience
 
 ### 📊 Export System
+
 - Multi-format forecast export (CSV, XLSX)
 - Streaming export for large datasets with 50,000 row limit
 - Confidence interval inclusion (Lower/Upper bounds)
@@ -75,6 +83,7 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 - Memory-efficient generator-based architecture
 
 ### 📤 Upload & Processing Pipeline
+
 - Multi-sheet Excel and CSV file support
 - Automatic sheet detection and selection
 - Intelligent column normalization (Part Number, SKU, Item → Part No)
@@ -83,6 +92,7 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 - Streaming file upload to disk
 
 ### 📈 Operational Dashboard
+
 - Real-time KPI monitoring (8 metric cards with sparklines)
 - Global demand vs AI forecast visualization
 - Risk distribution pie chart with drill-down
@@ -92,6 +102,7 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 - Critical alert banner with animated indicators
 
 ### 🧠 AI Insights
+
 - Severity-classified insights (CRITICAL, WARNING, OPTIMIZATION, INFO)
 - Confidence-scored recommendations
 - Gemini API integration for enhanced intelligence
@@ -160,39 +171,43 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 ## Tech Stack
 
 ### Frontend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| React | 19.x | UI framework with hooks-based architecture |
-| Vite | 8.x | Build tool and dev server with HMR |
-| TailwindCSS | 4.x | Utility-first CSS framework |
-| Recharts | 3.x | Composable charting library |
-| React Router | 7.x | Client-side routing |
-| Axios | 1.x | HTTP client for API communication |
-| Lucide React | 1.x | Icon component library |
-| React Window | 2.x | Virtualized list rendering |
+
+| Technology   | Version | Purpose                                    |
+| ------------ | ------- | ------------------------------------------ |
+| React        | 19.x    | UI framework with hooks-based architecture |
+| Vite         | 8.x     | Build tool and dev server with HMR         |
+| TailwindCSS  | 4.x     | Utility-first CSS framework                |
+| Recharts     | 3.x     | Composable charting library                |
+| React Router | 7.x     | Client-side routing                        |
+| Axios        | 1.x     | HTTP client for API communication          |
+| Lucide React | 1.x     | Icon component library                     |
+| React Window | 2.x     | Virtualized list rendering                 |
 
 ### Backend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| FastAPI | 0.115+ | Async Python web framework |
-| Uvicorn | - | ASGI server |
-| Pandas | 2.x | Data manipulation and analysis |
-| NumPy | 1.x | Numerical computing |
-| Python-dateutil | - | Date parsing utilities |
-| OpenPyXL | - | Excel file reading |
-| XlsxWriter | - | Excel file writing |
+
+| Technology      | Version | Purpose                        |
+| --------------- | ------- | ------------------------------ |
+| FastAPI         | 0.115+  | Async Python web framework     |
+| Uvicorn         | -       | ASGI server                    |
+| Pandas          | 2.x     | Data manipulation and analysis |
+| NumPy           | 1.x     | Numerical computing            |
+| Python-dateutil | -       | Date parsing utilities         |
+| OpenPyXL        | -       | Excel file reading             |
+| XlsxWriter      | -       | Excel file writing             |
 
 ### Deployment
-| Platform | Component | URL |
-|----------|-----------|-----|
-| Vercel | Frontend | [Production URL] |
-| HuggingFace Spaces | Backend API | [Backend URL] |
+
+| Platform           | Component   | URL              |
+| ------------------ | ----------- | ---------------- |
+| Vercel             | Frontend    | [Production URL] |
+| HuggingFace Spaces | Backend API | [Backend URL]    |
 
 ---
 
 ## Installation
 
 ### Prerequisites
+
 - Node.js 18+ and npm/pnpm
 - Python 3.11+
 - Git
@@ -200,12 +215,14 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 ### Local Setup
 
 #### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/Sarthak156/Inventory-Intelligence-Platform.git
 cd inventory-intelligence-platform
 ```
 
 #### 2. Backend Setup
+
 ```bash
 cd backend
 
@@ -226,6 +243,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 #### 3. Frontend Setup
+
 ```bash
 cd frontend
 
@@ -237,6 +255,7 @@ npm run dev
 ```
 
 #### 4. Access the Application
+
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8000
 - API Docs: http://localhost:8000/docs
@@ -246,12 +265,14 @@ npm run dev
 ## Environment Setup
 
 ### Backend (.env)
+
 ```env
 # Backend Configuration
 FRONTEND_URL=http://localhost:5173
 ```
 
 ### Frontend (.env)
+
 ```env
 # API Base URL (for production deployment)
 VITE_API_BASE_URL=https://your-backend-url.space
@@ -262,6 +283,7 @@ VITE_API_BASE_URL=https://your-backend-url.space
 ## Deployment
 
 ### Frontend (Vercel)
+
 ```bash
 cd frontend
 npm run build
@@ -269,6 +291,7 @@ vercel --prod
 ```
 
 ### Backend (HuggingFace Spaces)
+
 1. Create a new Space at [huggingface.co/spaces](https://huggingface.co/spaces)
 2. Select Docker SDK
 3. Push the `backend/` directory
@@ -417,35 +440,42 @@ inventory-intelligence-platform/
 ## Usage
 
 ### 1. Upload Data
+
 Navigate to the **Upload** page. Upload an Excel (.xlsx) or CSV file containing inventory data with columns like Part Number, monthly demand values, and optional metadata.
 
 ### 2. Process Sheet
+
 Select the appropriate sheet from your uploaded file. The system automatically transforms wide-format data into a normalized long format.
 
 ### 3. Explore Dashboard
+
 The **AI Operations Command Center** provides real-time KPIs, risk distribution, demand vs forecast visualization, and AI-generated insights.
 
 ### 4. Analyze Forecasts
+
 The **Forecast** page provides per-SKU demand forecasting with confidence scoring, state classification, and 12-month forward projections.
 
 ### 5. Assess Inventory Risk
+
 The **Inventory** page offers searchable, filterable inventory data with pagination. The **Risks** page provides detailed risk scoring and classification.
 
 ### 6. Review Recommendations
+
 The **Recommendations** page surfaces AI-driven operational recommendations with severity classification and actionable guidance.
 
 ### 7. Export Forecasts
+
 Use the **Export** feature to download forecast data in CSV or Excel format with confidence intervals and risk metadata.
 
 ---
 
 ## Future Roadmap
 
-| Phase | Features |
-|-------|----------|
-| **Phase 1** | Authentication & RBAC, Real-time Forecasting, Redis Caching |
+| Phase             | Features                                                                 |
+| ----------------- | ------------------------------------------------------------------------ |
+| **Phase 1** | Authentication & RBAC, Real-time Forecasting, Redis Caching              |
 | **Phase 2** | Async Exports, Background Jobs, Anomaly Detection, Supplier Intelligence |
-| **Phase 3** | ERP Integrations, AI Copilots, Predictive Procurement, Multi-warehouse |
+| **Phase 3** | ERP Integrations, AI Copilots, Predictive Procurement, Multi-warehouse   |
 
 ---
 
@@ -460,3 +490,4 @@ This project is licensed under the MIT License.
 - Built with React, FastAPI, and the open-source ecosystem
 - Deployed on Vercel and HuggingFace Spaces
 - Powered by Pandas, NumPy, and Scikit-learn
+
