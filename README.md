@@ -32,12 +32,11 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 | -------------------------------------- | -------------------------------------------------- |
 | ![Risk Preview](image/README/risk.png) | ![AI Recommendations Preview](image/README/ai.png) |
 
-| Settings                                        |
-| ----------------------------------------------- |
-| ![Settings Preview](image/README/settings.png)  |
+| Settings                                       |
+| ---------------------------------------------- |
+| ![Settings Preview](image/README/settings.png) |
 
 ---
-
 
 ## Features
 
@@ -197,10 +196,10 @@ Built for operations teams, supply chain analysts, and inventory managers, the p
 
 ### Deployment
 
-| Platform           | Component   | URL              |
-| ------------------ | ----------- | ---------------- |
-| Vercel             | Frontend    | [Production URL] |
-| HuggingFace Spaces | Backend API | [Backend URL]    |
+| Platform           | Component   | URL                                                                                                       |
+| ------------------ | ----------- | --------------------------------------------------------------------------------------------------------- |
+| Vercel             | Frontend    | [demandgrid.vercel.app](https://demandgrid.vercel.app/)                                                    |
+| HuggingFace Spaces | Backend API | [sarthak156-inventory-intelligence-api.hf.space](https://sarthak156-inventory-intelligence-api.hf.space/)  |
 
 ---
 
@@ -490,4 +489,3 @@ This project is licensed under the MIT License.
 - Built with React, FastAPI, and the open-source ecosystem
 - Deployed on Vercel and HuggingFace Spaces
 - Powered by Pandas, NumPy, and Scikit-learn
-
